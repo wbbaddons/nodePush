@@ -1,5 +1,6 @@
 <?php
 namespace wcf\system\nodePush;
+use wcf\util\StringUtil;
 
 /**
  * Push Handler.
@@ -11,13 +12,6 @@ namespace wcf\system\nodePush;
  * @subpackage	system.nodePush
  */
 class NodePushHandler extends \wcf\system\SingletonFactory {
-	/**
-	 * Filename of the socket.
-	 * 
-	 * @var string
-	 */
-	const SOCKET = 'inbound.sock';
-	
 	/**
 	 * Regex to validate messages.
 	 * 
@@ -49,10 +43,38 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 */
 	public function isRunning() {
 		if (!$this->isEnabled()) return false;
-		if (!file_exists($this->getSocketPath())) return false;
-		if (!is_writable($this->getSocketPath())) return false;
+		
+		try {
+			$sock = $this->connect();
+			if ($sock === false) return false;
+			
+			fclose($sock);
+		}
+		catch (\Exception $e) {
+			// gotta catch 'em all
+			try {
+				if (is_resource($sock)) fclose($sock);
+			}
+			catch (\Exception $e) { }
+			
+			return false;
+		}
 		
 		return true;
+	}
+	
+	/**
+	 * Connects to the inbound socket. Returns false if the connection failed.
+	 * 
+	 * @return boolean|resource
+	 */
+	private function connect() {
+		if (StringUtil::startsWith($this->getSocketPath(), 'unix://')) {
+			if (!file_exists(StringUtil::substring($this->getSocketPath(), 7))) return false;
+			if (!is_writable(StringUtil::substring($this->getSocketPath(), 7))) return false;
+		}
+		
+		return stream_socket_client($this->getSocketPath(), $errno, $errstr, 1);
 	}
 	
 	/**
@@ -63,17 +85,23 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 * @return	boolean
 	 */
 	public function sendMessage($message) {
-		if (!$this->isRunning()) return false;
+		if (!$this->isEnabled()) return false;
 		if (!$this->messageRegex->match($message)) return false;
 		
 		try {
-			$sock = stream_socket_client('unix://'.$this->getSocketPath(), $errno, $errstr, 1);
-			$success = fwrite($sock, trim($message));
+			$sock = $this->connect();
+			if ($sock === false) return false;
+			
+			$success = fwrite($sock, StringUtil::trim($message));
 			fclose($sock);
 		}
 		catch (\Exception $e) {
-			if ($sock) fclose($sock);
 			// gotta catch 'em all
+			try {
+				if (is_resource($sock)) fclose($sock);
+			}
+			catch (\Exception $e) { }
+			
 			return false;
 		}
 		
@@ -84,6 +112,6 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 * Returns the path to the SOCKET file.
 	 */
 	public function getSocketPath() {
-		return WCF_DIR.'acp/be.bastelstu.wcf.nodePush/'.self::SOCKET;
+		return str_replace('{WCF_DIR}', WCF_DIR, NODEPUSH_SOCKET);
 	}
 }

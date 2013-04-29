@@ -26,8 +26,16 @@ Load config
 
 Initialize sane values.
 
-	config.port ?= 9001
-	config.host ?= '0.0.0.0'
+	config.outbound ?= { }
+	config.outbound.useTCP ?= true
+	config.outbound.port ?= 9001
+	config.outbound.host ?= '0.0.0.0'
+	config.outbound.socket ?= __dirname + "/outbound.sock"
+	config.inbound ?= { }
+	config.inbound.useTCP ?= false
+	config.inbound.port ?= 9002
+	config.inbound.host ?= '127.0.0.1'
+	config.inbound.socket ?= __dirname + "/inbound.sock"
 	config.user ?= 'nobody'
 	config.group ?= 'nogroup'
 
@@ -51,10 +59,6 @@ be.bastelstu.chat.nodePush
 	
 Attributes
 ----------
-
-Location of the unix socket.
-
-		unixSocket: "#{__dirname}/../inbound.sock"
 
 Instance of express.
 
@@ -86,7 +90,15 @@ Methods
 		constructor: ->
 			log 'Starting nodePush'
 			log "PID is #{process.pid}"
-			log "Using port: #{config.port}"
+			if config.inbound.useTCP
+				log "Inbound: #{config.inbound.host}:#{config.inbound.port}"
+			else
+				log "Inbound: #{config.inbound.socket}"
+			if config.outbound.useTCP
+				log "Outbound: #{config.outbound.host}:#{config.outbound.port}"
+			else
+				log "Outbound: #{config.outbound.socket}"
+			
 			
 			@stats.bootTime = new Date()
 			
@@ -108,7 +120,7 @@ Set nice title for PS.
 Initialize socket server.
 
 		initServer: ->
-			log 'Initializing Frontend'
+			log 'Initializing outbound socket'
 
 Start HTTP service.
 
@@ -116,7 +128,7 @@ Start HTTP service.
 			@server = http.createServer @app
 			@io = io.listen @server
 			
-			@server.listen config.port, config.host, null, =>
+			listenCallback = =>
 
 Shed root privilegies.
 
@@ -149,6 +161,12 @@ Initialize intervals for tick events. The ticks are sent every 15 / 30 / 60 / 90
 				, 120e3
 				
 				log "Done"
+			
+			if config.outbound.useTCP
+				@server.listen config.outbound.port, config.outbound.host, null, listenCallback
+			else
+				@server.listen config.outbound.socket, listenCallback
+				fs.chmod config.outbound.socket, '777'
 
 Initialize production environment.
 
@@ -221,9 +239,12 @@ Kill connection after 5 seconds.
 
 				c.setTimeout 5e3, ->
 					c.end()
-				
-			socket.listen @unixSocket
-			fs.chmod @unixSocket, '777'
+			
+			if config.inbound.useTCP
+				socket.listen config.inbound.port, config.inbound.host
+			else
+				socket.listen config.inbound.socket
+				fs.chmod config.inbound.socket, '777'
 
 **shutdown()**  
 Performs a clean shutdown of nodePush.
@@ -234,7 +255,9 @@ Performs a clean shutdown of nodePush.
 			else
 				log "Shutting down: #{message}"
 			
-			fs.unlinkSync @unixSocket
+			fs.unlinkSync config.inbound.socket unless config.inbound.useTCP
+			fs.unlinkSync config.outbound.socket unless config.outbound.useTCP
+			
 			
 			process.removeAllListeners()
 			process.exit()

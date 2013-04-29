@@ -1,0 +1,16 @@
+module.exports = {
+	outbound: {
+		useTCP: true,
+		port: 9001,
+		host: '0.0.0.0',
+		socket: __dirname + "/outbound.sock"
+	},
+	inbound: {
+		useTCP: false,
+		port: 9002,
+		host: '127.0.0.1',
+		socket: __dirname + "/inbound.sock"
+	},
+	user: 'nobody',
+	group: 'nogroup'
+}
