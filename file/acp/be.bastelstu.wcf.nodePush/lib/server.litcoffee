@@ -212,6 +212,8 @@ Show the status page when '/' is requested.
 Sends a message with the given name.
 
 		sendMessage: (name) ->
+			return unless /[a-zA-Z0-9-_.]+$/.test name
+			
 			@stats.messages[name] ?= 0
 			@stats.messages[name]++
 			@io.sockets.send name
