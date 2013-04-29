@@ -80,34 +80,38 @@ Initialize socket.io to enable nodePush.
 					events.message[message].fire()
 
 **onConnect(callback)**  
-Adds a new callback that will be called when a connection to nodePush is established. The given 
-callback will be called once if a connection is established at time of calling.
+Adds a new `callback` that will be called when a connection to nodePush is established. The given 
+`callback` will be called once if a connection is established at time of calling. Returns `true`
+on success and `false` otherwise.
 
 			onConnect: (callback) ->
-				return unless $.isFunction callback
+				return false unless $.isFunction callback
 				
 				events.connect.add callback
 				
 				callback() if connected
-				undefined
+				true
 
 **onDisconnect(callback)**  
-Adds a new callback that will be called when the connection to nodePush is lost.
+Adds a new `callback` that will be called when the connection to nodePush is lost. Returns `true`
+on success and `false` otherwise.
 
 			onDisconnect: (callback) ->
-				return unless $.isFunction callback
+				return false unless $.isFunction callback
 				
 				events.disconnect.add callback
-				undefined
+				true
 
 **onMessage(message, callback)**  
-Adds a new callback that will be called when the specified message is received. 
+Adds a new `callback` that will be called when the specified `message` is received. Returns `true`
+on success and `false` otherwise.
 
 			onMessage: (message, callback) ->
-				return unless $.isFunction callback
+				false unless $.isFunction callback
+				false unless /[a-zA-Z0-9-_.]+$/.test message
 				
 				events.message[message] ?= $.Callbacks()
 				events.message[message].add callback
-				undefined
+				true
 			
 	)(jQuery, @)
