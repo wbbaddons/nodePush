@@ -10,4 +10,4 @@ echo "Installing dependencies"
 
 cd "../lib"
 
-/usr/bin/env coffee server.litcoffee
+/usr/bin/env node server.js
