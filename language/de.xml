@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language xmlns="http://www.woltlab.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.woltlab.com http://www.woltlab.com/XSD/maelstrom/language.xsd" languagecode="de">
+	<category name="wcf.acp.option">
+		<item name="wcf.acp.option.category.general.system.nodePush"><![CDATA[Push-Server]]></item>
+		<item name="wcf.acp.option.nodepush_host"><![CDATA[Push-Server-Adresse (nodePush)]]></item>
+		<item name="wcf.acp.option.nodepush_host.description"><![CDATA[Der Push-Server dient dazu verschiedene Meldungen in Echtzeit an den Browser zu übergeben.
+Hinweis: Setzen Sie diese Einstellung nur, wenn Sie wissen, was sie bewirkt. Die Adresse wird ohne abschließenden Slash (/) angegeben.]]></item>
+	</category>
+	
+	<category name="wcf.acp.index">
+		<item name="wcf.acp.index.health.nodePushDead"><![CDATA[Sie haben eine Adresse für den <a href="{@$__wcf->getPath()}acp/dereferrer.php?url={NODEPUSH_HOST|rawurlencode}" class="externalURL">Push-Server</a> angegeben, dieser scheint allerdings nicht korrekt gestartet zu sein.]]></item>
+	</category>
+</language>

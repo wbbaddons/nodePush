@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data xmlns="http://www.woltlab.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.woltlab.com http://www.woltlab.com/XSD/templateListener.xsd">
+	<import>
+		<templatelistener name="javascriptInclude">
+			<environment>user</environment>
+			<templatename>headInclude</templatename>
+			<eventname>javascriptInclude</eventname>
+			<templatecode><![CDATA[{if NODEPUSH_HOST}<script type="text/javascript" src="{NODEPUSH_HOST}/socket.io/socket.io.js"></script>
+<script type="text/javascript" src="{$__wcf->getPath()}js/be.bastelstu.wcf.nodePush.js"></script>{/if}]]></templatecode>
+		</templatelistener>
+		<templatelistener name="javascriptInit">
+			<environment>user</environment>
+			<templatename>headInclude</templatename>
+			<eventname>javascriptInit</eventname>
+			<templatecode><![CDATA[{if NODEPUSH_HOST}be.bastelstu.wcf.nodePush.init('{@NODEPUSH_HOST|encodeJS}');{/if}]]></templatecode>
+		</templatelistener>
+	</import>
+</data>

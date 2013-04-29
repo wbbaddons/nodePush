@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package name="be.bastelstu.wcf.nodePush" xmlns="http://www.woltlab.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.woltlab.com http://www.woltlab.com/XSD/maelstrom/package.xsd">
+	<packageinformation>
+		<packagename><![CDATA[nodePush]]></packagename>
+		<packagedescription><![CDATA[Push service for WoltLab Community Framework™.]]></packagedescription>
+		<isapplication>0</isapplication>
+		<version>1.0.5</version>
+		<date>2011-11-26</date>
+	</packageinformation>
+	
+	<authorinformation>
+		<author><![CDATA[Tim Düsterhus]]></author>
+		<authorurl><![CDATA[http://tims.bastelstu.be]]></authorurl>
+	</authorinformation>
+	
+	<requiredpackages>
+		<requiredpackage minversion="2.0.0 Alpha 1">com.woltlab.wcf</requiredpackage>
+	</requiredpackages>
+	
+	<instructions type="install">
+		<instruction type="file">file.tar</instruction>
+		<instruction type="language">language/*.xml</instruction>
+		<instruction type="option">option.xml</instruction>
+		<instruction type="eventListener">eventListener.xml</instruction>
+		<instruction type="templateListener">templateListener.xml</instruction>
+	</instructions>
+	
+	<instructions type="update" fromversion="*">
+		<instruction type="file">file.tar</instruction>
+		<instruction type="language">language/*.xml</instruction>
+		<instruction type="option">option.xml</instruction>
+		<instruction type="eventListener">eventListener.xml</instruction>
+		<instruction type="templateListener">templateListener.xml</instruction>
+	</instructions>
+</package>

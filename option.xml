@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data xmlns="http://www.woltlab.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.woltlab.com http://www.woltlab.com/XSD/maelstrom/option.xsd">
+	<import>
+		<categories>
+			<category name="general.system.nodePush">
+				<parent>general.system</parent>
+			</category>
+		</categories>
+
+		<options>
+			<option name="nodepush_host">
+				<categoryname>general.system.nodePush</categoryname>
+				<optiontype>text</optiontype>
+				<defaultvalue><![CDATA[]]></defaultvalue>
+				<showorder>1</showorder>
+			</option>
+		</options>
+	</import>
+</data>			

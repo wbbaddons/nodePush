@@ -1,0 +1,20 @@
+{
+	"name": "be.bastelstu.wcf.nodePush",
+	"description": "node.js-Pushing for WoltLab Community Framework",
+	"homepage": "https://github.com/wbbaddons/nodePush",
+	"keywords": [ 
+		"push",
+		"websocket",
+		"woltlab community framework"
+	],
+	"author": "Tim Düsterhus <timwolla@bastelstu.be>",
+	"dependencies": {
+		"socket.io": "~0.8",
+		"express": "~3"
+	},
+	"engines": { 
+		"node": ">=0.6.0",
+		"npm": ">=1.0"
+	}, 
+	"version": "1.0.0"
+}
