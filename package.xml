@@ -4,7 +4,7 @@
 		<packagename><![CDATA[nodePush]]></packagename>
 		<packagedescription><![CDATA[Push service for WoltLab Community Framework™.]]></packagedescription>
 		<isapplication>0</isapplication>
-		<version>1.0.5</version>
+		<version>1.0.0 Alpha 1</version>
 		<date>2011-11-26</date>
 	</packageinformation>
 	
