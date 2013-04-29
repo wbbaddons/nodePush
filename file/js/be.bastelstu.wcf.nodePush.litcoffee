@@ -64,17 +64,17 @@ Initialize socket.io to enable nodePush.
 					
 				socket = window.io.connect host
 				
-				socket.on 'connect', =>
+				socket.on 'connect', ->
 					connected = true
 					console.log 'Connected to nodePush'
 					events.connect.fire()
 					
-				socket.on 'disconnect', =>
+				socket.on 'disconnect', ->
 					connected = false
 					console.warn 'Lost connection to nodePush'
 					events.disconnect.fire()
 				
-				socket.on 'message', (message) =>
+				socket.on 'message', (message) ->
 					return unless events.message[message]?
 					
 					events.message[message].fire()
