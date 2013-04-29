@@ -69,7 +69,7 @@ Methods
 **constructor()**
 
 		constructor: ->
-			log 'Starting Pushserver for Tims Chat'
+			log 'Starting nodePush'
 			log "PID is #{process.pid}"
 			log "Using port: #{config.port}"
 			
