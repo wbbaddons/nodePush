@@ -51,10 +51,25 @@ be.bastelstu.chat.nodePush
 	
 Attributes
 ----------
+
+Location of the unix socket.
+
 		unixSocket: "#{__dirname}/../inbound.sock"
+
+Instance of express.
+
 		app: null
+
+Instance of http
+
 		server: null
+
+Instance of socket.io
+
 		io: null
+
+Statistics for the status page.
+
 		stats:
 			status: 0
 			outbound: 
@@ -94,11 +109,17 @@ Initialize socket server.
 
 		initServer: ->
 			log 'Initializing Frontend'
+
+Start HTTP service.
+
 			@app = express()
 			@server = http.createServer @app
 			@io = io.listen @server
 			
 			@server.listen config.port, config.host, null, =>
+
+Shed root privilegies.
+
 				if process.getuid() is 0 or process.getgid() is 0
 					try
 						log 'Trying to shed root privilegies'
@@ -184,7 +205,9 @@ Initialize PHP side unix socket.
 			log 'Initializing inbound socket'
 			socket = net.createServer (c) =>
 				@stats.inbound++
-				
+
+Pass data to the browsers and close connection.
+
 				c.on 'data', (data) =>
 					setTimeout =>
 						@sendMessage data.toString().trim()
@@ -193,7 +216,9 @@ Initialize PHP side unix socket.
 				
 				c.on 'end', ->
 					c.end()
-				
+
+Kill connection after 5 seconds.
+
 				c.setTimeout 5e3, ->
 					c.end()
 				
