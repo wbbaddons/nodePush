@@ -10,4 +10,4 @@ echo "Installing dependencies"
 
 cd "../lib"
 
-/usr/bin/env node server.js
+/usr/bin/env node bootstrap.js

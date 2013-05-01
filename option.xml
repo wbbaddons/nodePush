@@ -18,7 +18,7 @@
 			<option name="nodepush_socket">
 				<categoryname>general.system.nodePush</categoryname>
 				<optiontype>text</optiontype>
-				<defaultvalue><![CDATA[unix://{WCF_DIR}acp/be.bastelstu.wcf.nodePush/inbound.sock]]></defaultvalue>
+				<defaultvalue><![CDATA[unix://{WCF_DIR}acp/be.bastelstu.wcf.nodePush/tmp/inbound.sock]]></defaultvalue>
 				<showorder>2</showorder>
 			</option>
 		</options>

@@ -49,7 +49,10 @@ Prepare environment
 	
 	thousandsSeparator = (number) ->
 		String(number).replace /(^-?\d{1,3}|\d{3})(?=(?:\d{3})+(?:$|\.))/g, '$1,'
-
+	
+	fs.open "#{__dirname}/../tmp/nodePush.child.pid", "w", 0o600, (err, fd) ->
+		fs.writeSync fd, process.pid
+	
 	# Ensure our namespace is present
 	be = be ? {}
 	be.bastelstu ?= {}
@@ -91,8 +94,8 @@ Methods
 **constructor()**
 
 		constructor: ->
-			log 'Starting nodePush'
-			log "PID is #{process.pid}"
+			log "nodePush running (pid:#{process.pid})"
+			
 			if config.inbound.useTCP
 				log "Inbound: #{config.inbound.host}:#{config.inbound.port}"
 			else
@@ -110,10 +113,16 @@ Methods
 			
 Bind shutdown function to needed events.
 
-			process.on 'exit', @shutdown.bind @
-			process.on 'uncaughtException', @shutdown.bind @
-			process.on 'SIGINT', @shutdown.bind @
-			process.on 'SIGTERM', @shutdown.bind @
+			process.on 'exit', =>
+				@shutdown()
+			process.on 'uncaughtException', (message) =>
+				@shutdown message, 1
+			process.on 'SIGINT', =>
+				@shutdown()
+			process.on 'SIGTERM', =>
+				@shutdown()
+			process.on 'SIGHUP', =>
+				@shutdown null, 2
 
 Set nice title for PS.
 
@@ -256,18 +265,18 @@ Kill connection after 5 seconds.
 **shutdown()**  
 Performs a clean shutdown of nodePush.
 
-		shutdown: (message) ->
-			if not message
-				log 'Shutting down'
-			else
+		shutdown: (message = null, code = 0) ->
+			if message?
 				log "Shutting down: #{message}"
+			else
+				log 'Shutting down'
 			
 			fs.unlinkSync config.inbound.socket if not config.inbound.useTCP and fs.existsSync config.inbound.socket
 			fs.unlinkSync config.outbound.socket if not config.outbound.useTCP and fs.existsSync config.outbound.socket
 			
 			
 			process.removeAllListeners()
-			process.exit()
+			process.exit code
 
 And finally start the service.
 
