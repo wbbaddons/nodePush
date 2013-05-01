@@ -197,7 +197,9 @@ Record statistics for Websocket connections.
 Show the status page when '/' is requested.
 
 			@app.get '/', (req, res) =>
-				res.type 'text/plain'
+				res.charset = 'utf-8';
+				res.type 'txt'
+				
 				@stats.status++
 				reply = """
 				Up since: #{@stats.bootTime}
