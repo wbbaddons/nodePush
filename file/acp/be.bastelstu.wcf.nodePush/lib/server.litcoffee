@@ -1,5 +1,5 @@
-nodePush Pushserver for Tims Chat
-=================================
+nodePush Pushserver
+===================
 
 Copyright Information
 ---------------------
@@ -45,7 +45,7 @@ Initialize sane values.
 Prepare environment
 
 	log = (message) ->
-		console.log "[be.bastelstu.chat.nodePush] #{message}"
+		console.log "[be.bastelstu.wcf.nodePush] #{message}"
 	
 	thousandsSeparator = (number) ->
 		String(number).replace /(^-?\d{1,3}|\d{3})(?=(?:\d{3})+(?:$|\.))/g, '$1,'
@@ -53,12 +53,12 @@ Prepare environment
 	# Ensure our namespace is present
 	be = be ? {}
 	be.bastelstu ?= {}
-	be.bastelstu.chat ?= {}
+	be.bastelstu.wcf ?= {}
 
-be.bastelstu.chat.nodePush
-==========================
+be.bastelstu.wcf.nodePush
+=========================
 
-	class be.bastelstu.chat.nodePush
+	class be.bastelstu.wcf.nodePush
 	
 Attributes
 ----------
@@ -117,7 +117,7 @@ Bind shutdown function to needed events.
 
 Set nice title for PS.
 
-			process.title = 'nodePush - Tims Chat'
+			process.title = 'nodePush'
 
 **initServer()**  
 Initialize socket server.
@@ -148,19 +148,19 @@ Shed root privilegies.
 Initialize intervals for tick events. The ticks are sent every 15 / 30 / 60 / 90 / 120 seconds.
 
 				setInterval =>
-					@sendMessage 'tick15'
+					@sendMessage 'be.bastelstu.wcf.nodePush.tick15'
 				, 15e3
 				setInterval =>
-					@sendMessage 'tick30'
+					@sendMessage 'be.bastelstu.wcf.nodePush.tick30'
 				, 30e3
 				setInterval =>
-					@sendMessage 'tick60'
+					@sendMessage 'be.bastelstu.wcf.nodePush.tick60'
 				, 60e3
 				setInterval =>
-					@sendMessage 'tick90'
+					@sendMessage 'be.bastelstu.wcf.nodePush.tick90'
 				, 90e3
 				setInterval =>
-					@sendMessage 'tick120'
+					@sendMessage 'be.bastelstu.wcf.nodePush.tick120'
 				, 120e3
 				
 				log "Done"
@@ -217,7 +217,7 @@ Show the status page when '/' is requested.
 Sends a message with the given name.
 
 		sendMessage: (name) ->
-			return unless /[a-zA-Z0-9-_.]+$/.test name
+			return unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test name
 			
 			@stats.messages[name] ?= 0
 			@stats.messages[name]++
@@ -271,4 +271,4 @@ Performs a clean shutdown of nodePush.
 
 And finally start the service.
 
-	new be.bastelstu.chat.nodePush()
+	new be.bastelstu.wcf.nodePush()

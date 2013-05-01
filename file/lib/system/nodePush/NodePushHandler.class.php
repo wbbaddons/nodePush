@@ -11,21 +11,7 @@ use wcf\util\StringUtil;
  * @package	be.bastelstu.wcf.nodePush
  * @subpackage	system.nodePush
  */
-class NodePushHandler extends \wcf\system\SingletonFactory {
-	/**
-	 * Regex to validate messages.
-	 * 
-	 * @var \wcf\system\Regex
-	 */
-	protected $messageRegex = null;
-	
-	/**
-	 * @see	\wcf\system\SingletonFactory::init()
-	 */
-	protected function init() {
-		$this->messageRegex = new \wcf\system\Regex('^[a-zA-Z0-9-_.]+$');
-	}
-	
+class NodePushHandler extends \wcf\system\SingletonFactory {	
 	/**
 	 * Returns whether the push server is enabled.
 	 * 
@@ -86,7 +72,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 */
 	public function sendMessage($message) {
 		if (!$this->isEnabled()) return false;
-		if (!$this->messageRegex->match($message)) return false;
+		if (!\wcf\data\package\Package::isValidPackageName($message)) return false;
 		
 		try {
 			$sock = $this->connect();

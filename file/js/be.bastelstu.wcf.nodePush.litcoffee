@@ -31,8 +31,8 @@ Overwrite `console` to add the origin in front of the message
 			error: (message) ->
 				window.console.error "[be.bastelstu.wcf.nodePush] #{message}"
 
-be.bastelstu.Chat
-=================
+be.bastelstu.wcf.nodePush
+=========================
 
 Private Attributes
 ------------------
@@ -108,7 +108,7 @@ on success and `false` otherwise.
 
 			onMessage: (message, callback) ->
 				false unless $.isFunction callback
-				false unless /[a-zA-Z0-9-_.]+$/.test message
+				false unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test message
 				
 				events.message[message] ?= $.Callbacks()
 				events.message[message].add callback
