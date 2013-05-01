@@ -2,12 +2,12 @@
 <?php
 namespace be\bastelstu\wcf\nodePush;
 /**
- * Builds the Chat
+ * Builds nodePush package.
  *
  * @author	Tim Düsterhus
  * @copyright	2012-2013 Tim Düsterhus
  * @license	BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>
- * @package	be.bastelstu.nodePush
+ * @package	be.bastelstu.wcf.nodePush
  */
 $packageXML = file_get_contents('package.xml');
 preg_match('/<version>(.*?)<\/version>/', $packageXML, $matches);
