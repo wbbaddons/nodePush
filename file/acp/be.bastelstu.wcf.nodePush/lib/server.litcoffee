@@ -135,7 +135,7 @@ Start HTTP service.
 
 Shed root privilegies.
 
-				if process.getuid() is 0 or process.getgid() is 0
+				if process.getuid? and (process.getuid() is 0 or process.getgid() is 0)
 					try
 						log 'Trying to shed root privilegies'
 						process.setgid config.group
