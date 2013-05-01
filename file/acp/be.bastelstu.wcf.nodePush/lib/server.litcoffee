@@ -262,8 +262,8 @@ Performs a clean shutdown of nodePush.
 			else
 				log "Shutting down: #{message}"
 			
-			fs.unlinkSync config.inbound.socket unless config.inbound.useTCP
-			fs.unlinkSync config.outbound.socket unless config.outbound.useTCP
+			fs.unlinkSync config.inbound.socket if not config.inbound.useTCP and fs.existsSync config.inbound.socket
+			fs.unlinkSync config.outbound.socket if not config.outbound.useTCP and fs.existsSync config.outbound.socket
 			
 			
 			process.removeAllListeners()
