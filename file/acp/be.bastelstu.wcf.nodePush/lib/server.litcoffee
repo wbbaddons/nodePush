@@ -12,7 +12,7 @@ Copyright Information
 Setup
 -----
 
-Load required namespaces.
+First we import the required packages and make them available in a global variable.
 
 	express = require 'express'
 	http = require 'http'
@@ -20,14 +20,14 @@ Load required namespaces.
 	net = require 'net'
 	fs = require 'fs'
 
-Load config
+Next we try to load the configuration file "config.js".
 
 	try
 		config = require '../config.js'
 	catch e
 		config = { }
 
-Initialize sane values.
+In case not every configuration property is set we initialize it with a default property.
 
 	config.outbound ?= { }
 	config.outbound.useTCP ?= true
@@ -42,7 +42,7 @@ Initialize sane values.
 	config.user ?= 'nobody'
 	config.group ?= 'nogroup'
 
-Prepare environment
+We continue with creating some helper functions.
 
 	log = (message) ->
 		console.log "[be.bastelstu.wcf.nodePush] #{message}"
@@ -66,19 +66,19 @@ be.bastelstu.wcf.nodePush
 Attributes
 ----------
 
-Instance of express.
+`app` will become an instance of `express`.
 
 		app: null
 
-Instance of http
+`server` willbecome an instance of `http`.
 
 		server: null
 
-Instance of socket.io
+`io` will become an instance of `socket.io`.
 
 		io: null
 
-Statistics for the status page.
+`stats` is an object with the different statistics recorded. Statistics will be shown on the status page.
 
 		stats:
 			status: 0
@@ -91,11 +91,15 @@ Statistics for the status page.
 
 Methods
 -------
-**constructor()**
+**constructor()**  
+The constructor is executed when the class is initialized. It prints some helpful information,
+such as the PID and the used sockets and continues with initializing everything.
 
 		constructor: ->
 			log "nodePush running (pid:#{process.pid})"
-			
+
+First we display the used inbound and outbound sockets.
+
 			if config.inbound.useTCP
 				log "Inbound: #{config.inbound.host}:#{config.inbound.port}"
 			else
@@ -107,11 +111,13 @@ Methods
 			
 			
 			@stats.bootTime = new Date()
-			
-			@initUnixSocket()
-			@initServer()
-			
-Bind shutdown function to needed events.
+
+Afterwards we initialize the inbound and outbound connection.
+
+			@initInbound()
+			@initOutbound()
+
+In order to do a proper cleanup on shutdown we bind the `shutdown` method to the needed events and signals.
 
 			process.on 'exit', =>
 				@shutdown()
@@ -124,25 +130,52 @@ Bind shutdown function to needed events.
 			process.on 'SIGHUP', =>
 				@shutdown null, 2
 
-Set nice title for PS.
+At the end we set a nice title for `ps`.
 
 			process.title = 'nodePush'
 
-**initServer()**  
-Initialize socket server.
+**initOutbound()**  
+`initOutbound` initializes the connection to the browser. That includes starting the HTTP server and preparing
+socket.io.
 
-		initServer: ->
+		initOutbound: ->
 			log 'Initializing outbound socket'
 
-Start HTTP service.
+First we start the express based HTTP server.
 
 			@app = express()
 			@server = http.createServer @app
 			@io = io.listen @server
-			
+
+Afterwards we set socket.io configuration for the default environment. Files will be minified and logging reduced to a minimum.
+
+			@io.set 'log level', 1
+			@io.set 'browser client etag', true
+			@io.set 'browser client minification', true
+			@io.set 'browser client gzip', true
+
+In case `env` is set to development we show some more debug output.
+
+			@io.configure 'development', =>
+				@io.set 'log level', 3
+				@io.set 'browser client etag', false
+				@io.set 'browser client minification', false
+
+Next we listen on the socket.io `connection` event to record statistics.
+
+			@io.sockets.on 'connection', (socket) =>
+				@stats.outbound.total++
+				@stats.outbound.current++
+				
+				socket.on 'disconnect', =>
+					@stats.outbound.current--
+
+We continue with creating a callback for the `listen` call.
+
 			listenCallback = =>
 
-Shed root privilegies.
+In case we are running as root we try to shed root privilegies. If this is not possible we exit, as a service
+running as root is dangerous.
 
 				if process.getuid? and (process.getuid() is 0 or process.getgid() is 0)
 					try
@@ -154,7 +187,7 @@ Shed root privilegies.
 						log 'Cowardly refusing to keep the process alive as root.'
 						process.exit 1
 
-Initialize intervals for tick events. The ticks are sent every 15 / 30 / 60 / 90 / 120 seconds.
+After the the HTTP server is listening and we are no longer running as root we start some intervals for the builtin tick events.
 
 				setInterval =>
 					@sendMessage 'be.bastelstu.wcf.nodePush.tick15'
@@ -173,35 +206,14 @@ Initialize intervals for tick events. The ticks are sent every 15 / 30 / 60 / 90
 				, 120e3
 				
 				log "Done"
-			
+
+Start listening on the configured outbound socket.
+
 			if config.outbound.useTCP
 				@server.listen config.outbound.port, config.outbound.host, null, listenCallback
 			else
 				@server.listen config.outbound.socket, listenCallback
 				fs.chmod config.outbound.socket, '777'
-
-Initialize production environment.
-
-			@io.set 'log level', 1
-			@io.set 'browser client etag', true
-			@io.set 'browser client minification', true
-			@io.set 'browser client gzip', true
-
-Development configuration.
-
-			@io.configure 'development', =>
-				@io.set 'log level', 3
-				@io.set 'browser client etag', false
-				@io.set 'browser client minification', false
-
-Record statistics for Websocket connections.
-
-			@io.sockets.on 'connection', (socket) =>
-				@stats.outbound.total++
-				@stats.outbound.current++
-				
-				socket.on 'disconnect', =>
-					@stats.outbound.current--
 
 Show the status page when '/' is requested.
 
@@ -232,15 +244,18 @@ Sends a message with the given name.
 			@stats.messages[name]++
 			@io.sockets.send name
 
-**initUnixSocket()**  
-Initialize PHP side unix socket.
+**initInbound()**  
+`initInbound` initializes the PHP side socket.
 
-		initUnixSocket: ->
+		initBound: ->
 			log 'Initializing inbound socket'
+
+We start by creating a server.
+
 			socket = net.createServer (c) =>
 				@stats.inbound++
 
-Pass data to the browsers and close connection.
+In case data is written to the server we pass it to the connected browsers and close the connection afterwards.
 
 				c.on 'data', (data) =>
 					setTimeout =>
@@ -251,11 +266,13 @@ Pass data to the browsers and close connection.
 				c.on 'end', ->
 					c.end()
 
-Kill connection after 5 seconds.
+In case nothing happens within 5 seconds we close the connection in order to save resources.
 
 				c.setTimeout 5e3, ->
 					c.end()
-			
+
+After all callbacks are bound we start listening.
+
 			if config.inbound.useTCP
 				socket.listen config.inbound.port, config.inbound.host
 			else
@@ -263,7 +280,7 @@ Kill connection after 5 seconds.
 				fs.chmod config.inbound.socket, '777'
 
 **shutdown()**  
-Performs a clean shutdown of nodePush.
+`shutdown` performs a clean shutdown of nodePush. It cleans up the unix socket files.
 
 		shutdown: (message = null, code = 0) ->
 			if message?
@@ -278,6 +295,6 @@ Performs a clean shutdown of nodePush.
 			process.removeAllListeners()
 			process.exit code
 
-And finally start the service.
+In the end we finally initialize the class with starts all the services.
 
 	new be.bastelstu.wcf.nodePush()
