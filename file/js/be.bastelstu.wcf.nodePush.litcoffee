@@ -50,7 +50,7 @@ Private Attributes
 Methods
 -------
 
-**init(host)**  
+**init(string host)**  
 Initialize socket.io to enable nodePush.
 
 			init: (host) ->
@@ -79,7 +79,7 @@ Initialize socket.io to enable nodePush.
 					
 					events.message[message].fire()
 
-**onConnect(callback)**  
+**boolean onConnect(Function callback)**  
 Adds a new `callback` that will be called when a connection to nodePush is established. The given 
 `callback` will be called once if a connection is established at time of calling. Returns `true`
 on success and `false` otherwise.
@@ -92,7 +92,7 @@ on success and `false` otherwise.
 				callback() if connected
 				true
 
-**onDisconnect(callback)**  
+**boolean onDisconnect(Function callback)**  
 Adds a new `callback` that will be called when the connection to nodePush is lost. Returns `true`
 on success and `false` otherwise.
 
@@ -102,7 +102,7 @@ on success and `false` otherwise.
 				events.disconnect.add callback
 				true
 
-**onMessage(message, callback)**  
+**boolean onMessage(string message, Function callback)**  
 Adds a new `callback` that will be called when the specified `message` is received. Returns `true`
 on success and `false` otherwise.
 
