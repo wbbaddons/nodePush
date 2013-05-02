@@ -31,5 +31,6 @@
 		<instruction type="option">option.xml</instruction>
 		<instruction type="eventListener">eventListener.xml</instruction>
 		<instruction type="templateListener">templateListener.xml</instruction>
+		<instruction type="script" run="standalone">acp/be.bastelstu.wcf.nodePush.update.php</instruction>
 	</instructions>
 </package>
