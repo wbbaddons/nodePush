@@ -248,6 +248,9 @@ Sends a message with the given name.
 		sendMessage: (name) ->
 			return unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test name
 			
+			if name is 'be.bastelstu.wcf.nodePush._restart'
+				process.kill process.pid, 'SIGHUP'
+			
 			if @app.get('env') is 'development'
 				@stats.messages[name] ?= 0
 				@stats.messages[name]++
