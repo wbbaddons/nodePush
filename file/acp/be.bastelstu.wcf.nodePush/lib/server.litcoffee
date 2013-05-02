@@ -164,7 +164,7 @@ In case `env` is set to development we show some more debug output.
 Next we listen on the socket.io `connection` event to record statistics.
 
 			@io.sockets.on 'connection', (socket) =>
-				@stats.outbound.total++
+				@stats.outbound.total++ if @app.get('env') is 'development'
 				@stats.outbound.current++
 				
 				socket.on 'disconnect', =>
@@ -220,17 +220,25 @@ Show the status page when '/' is requested.
 			@app.get '/', (req, res) =>
 				res.charset = 'utf-8';
 				res.type 'txt'
-				
-				@stats.status++
-				reply = """
-				Up since: #{@stats.bootTime}
-				Status page: #{thousandsSeparator @stats.status} Requests
-				Outbound: #{thousandsSeparator @stats.outbound.current} now - #{thousandsSeparator @stats.outbound.total} Total
-				Inbound: #{thousandsSeparator @stats.inbound}
-				Messages:
-				"""
-				for message, amount of @stats.messages
-					reply += "\n	#{message}: #{thousandsSeparator amount}"
+
+Show detailed information when environment is `development`.
+
+				if @app.get('env') is 'development'
+					@stats.status++
+					reply = """
+					Up since: #{@stats.bootTime}
+					Status page: #{thousandsSeparator @stats.status} Requests
+					Outbound: #{thousandsSeparator @stats.outbound.current} now - #{thousandsSeparator @stats.outbound.total} Total
+					Inbound: #{thousandsSeparator @stats.inbound}
+					Messages:
+					"""
+					for message, amount of @stats.messages
+						reply += "\n	#{message}: #{thousandsSeparator amount}"
+				else
+					reply = """
+					Up since: #{@stats.bootTime}
+					Outbound: #{thousandsSeparator @stats.outbound.current} now
+					"""
 				
 				res.send reply
 
@@ -240,20 +248,22 @@ Sends a message with the given name.
 		sendMessage: (name) ->
 			return unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test name
 			
-			@stats.messages[name] ?= 0
-			@stats.messages[name]++
+			if @app.get('env') is 'development'
+				@stats.messages[name] ?= 0
+				@stats.messages[name]++
+				
 			@io.sockets.send name
 
 **initInbound()**  
 `initInbound` initializes the PHP side socket.
 
-		initBound: ->
+		initInbound: ->
 			log 'Initializing inbound socket'
 
 We start by creating a server.
 
 			socket = net.createServer (c) =>
-				@stats.inbound++
+				@stats.inbound++ if @app.get('env') is 'development'
 
 In case data is written to the server we pass it to the connected browsers and close the connection afterwards.
 

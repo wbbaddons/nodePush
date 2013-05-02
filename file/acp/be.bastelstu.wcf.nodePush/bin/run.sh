@@ -10,4 +10,4 @@ echo "Installing dependencies"
 
 cd "../lib"
 
-/usr/bin/env node bootstrap.js
+/usr/bin/env NODE_ENV=production node bootstrap.js
