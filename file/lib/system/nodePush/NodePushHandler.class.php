@@ -13,7 +13,7 @@ use wcf\util\StringUtil;
  */
 class NodePushHandler extends \wcf\system\SingletonFactory {	
 	/**
-	 * Returns whether the push server is enabled.
+	 * Returns whether the push server is enabled.  (i.e. `NODEPUSH_HOST` is set)
 	 * 
 	 * @return	boolean
 	 */
@@ -22,8 +22,8 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	}
 	
 	/**
-	 * Returns whether the push server appears running. Output may not
-	 * 100% correct, but is pretty reliable.
+	 * Returns whether the push server appears running (i.e. one can connect to it).
+	 * Output may not 100% correct, but is pretty reliable.
 	 * 
 	 * @return	boolean
 	 */
@@ -70,15 +70,16 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 * @param	string		$message
 	 * @return	boolean
 	 */
-	public function sendMessage($message) {
+	public function sendMessage($message, $userIDs = array()) {
 		if (!$this->isEnabled()) return false;
 		if (!\wcf\data\package\Package::isValidPackageName($message)) return false;
+		$userIDs = \wcf\util\ArrayUtil::toIntegerArray($userIDs);
 		
 		try {
 			$sock = $this->connect();
 			if ($sock === false) return false;
 			
-			$success = fwrite($sock, StringUtil::trim($message));
+			$success = fwrite($sock, $message.($userIDs ? ':'.implode(',', $userIDs) : ''));
 			fclose($sock);
 		}
 		catch (\Exception $e) {
@@ -95,7 +96,9 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	}
 	
 	/**
-	 * Returns the path to the SOCKET file.
+	 * Returns the path to the "inbound" socket file.
+	 * 
+	 * @return	string
 	 */
 	public function getSocketPath() {
 		return str_replace('{WCF_DIR}', WCF_DIR, NODEPUSH_SOCKET);
