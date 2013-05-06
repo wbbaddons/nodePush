@@ -64,16 +64,23 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	}
 	
 	/**
-	 * Sends a message to all connected clients. Returns true on success
+	 * Sends a message to the connected clients. Returns true on success
 	 * and false otherwise.
 	 * 
-	 * @param	string		$message
+	 * If $userIDs is an empty array the message will be set to every connected
+	 * client. Otherwise the message will only be sent to clients with the given userID.
+	 * 
+	 * ATTENTION: Do NOT (!) send any security related information via sendMessage. 
+	 * The userID given can easily be forged, by a malicious client!
+	 * 
+	 * @param	string			$message
+	 * @param	array<integer>	$userIDs
 	 * @return	boolean
 	 */
 	public function sendMessage($message, $userIDs = array()) {
 		if (!$this->isEnabled()) return false;
 		if (!\wcf\data\package\Package::isValidPackageName($message)) return false;
-		$userIDs = \wcf\util\ArrayUtil::toIntegerArray($userIDs);
+		$userIDs = array_unique(\wcf\util\ArrayUtil::toIntegerArray($userIDs));
 		
 		try {
 			$sock = $this->connect();

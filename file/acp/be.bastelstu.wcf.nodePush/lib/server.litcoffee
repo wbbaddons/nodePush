@@ -167,9 +167,25 @@ Next we listen on the socket.io `connection` event to record statistics.
 				@stats.outbound.total++ if @app.get('env') is 'development'
 				@stats.outbound.current++
 				
+				socket.on 'userID', (userID) =>
+					socket.get 'userID', (_, currentUserID) =>
+
+In case a client misbehaves, by sending the `userID` twice, we `disconnect` it.
+
+						if currentUserID?
+							socket.disconnect()
+							return
+
+Mark user as *authenticated* by joining **user**. If a client does not send a `userID` it will not receive any messages.
+
+						socket.set 'userID', userID
+						socket.join 'authenticated'
+						socket.join "user#{userID}"
+						socket.emit 'authenticated'
+				
 				socket.on 'disconnect', =>
 					@stats.outbound.current--
-
+							
 We continue with creating a callback for the `listen` call.
 
 			listenCallback = =>
@@ -245,7 +261,7 @@ Show detailed information when environment is `development`.
 **sendMessage(name)**  
 Sends a message with the given name.
 
-		sendMessage: (name) ->
+		sendMessage: (name, userIDs = [ ]) ->
 			return unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test name
 			
 			if name is 'be.bastelstu.wcf.nodePush._restart'
@@ -254,8 +270,12 @@ Sends a message with the given name.
 			if @app.get('env') is 'development'
 				@stats.messages[name] ?= 0
 				@stats.messages[name]++
-				
-			@io.sockets.send name
+			
+			if userIDs.length
+				for userID in userIDs
+					@io.sockets.in("user#{userID}").send name
+			else
+				@io.sockets.in('authenticated').send name
 
 **initInbound()**  
 `initInbound` initializes the PHP side socket.
@@ -271,8 +291,15 @@ We start by creating a server.
 In case data is written to the server we pass it to the connected browsers and close the connection afterwards.
 
 				c.on 'data', (data) =>
+					[ message, userIDs ] = data.toString().trim().split /:/
+					if userIDs? and userIDs.length
+						userIDs = userIDs.split /,/
+						userIDs = (parseInt userID for userID in userIDs when not isNaN parseInt userID)
+					else
+						userIDs = [ ]
+					
 					setTimeout =>
-						@sendMessage data.toString().trim()
+						@sendMessage message, userIDs
 					, 20
 					c.end()
 				

@@ -65,10 +65,14 @@ Initialize socket.io to enable nodePush.
 				socket = window.io.connect host
 				
 				socket.on 'connect', ->
-					connected = true
 					console.log 'Connected to nodePush'
+					socket.emit 'userID', WCF.User.userID
+				
+				socket.on 'authenticated', ->
+					console.log 'Exchanged userID with nodePush'
+					connected = true
 					events.connect.fire()
-					
+				
 				socket.on 'disconnect', ->
 					connected = false
 					console.warn 'Lost connection to nodePush'
@@ -80,9 +84,9 @@ Initialize socket.io to enable nodePush.
 					events.message[message].fire()
 
 **boolean onConnect(Function callback)**  
-Adds a new `callback` that will be called when a connection to nodePush is established. The given 
-`callback` will be called once if a connection is established at time of calling. Returns `true`
-on success and `false` otherwise.
+Adds a new `callback` that will be called when a connection to nodePush is established and the
+userID was exchanged. The given `callback` will be called once if a connection is established at
+time of calling. Returns `true` on success and `false` otherwise.
 
 			onConnect: (callback) ->
 				return false unless $.isFunction callback
