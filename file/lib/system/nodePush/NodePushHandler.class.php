@@ -13,7 +13,7 @@ use wcf\util\StringUtil;
  */
 class NodePushHandler extends \wcf\system\SingletonFactory {	
 	/**
-	 * Returns whether the push server is enabled.  (i.e. `NODEPUSH_HOST` is set)
+	 * Returns whether the push server is enabled (i.e. `NODEPUSH_HOST` is set).
 	 * 
 	 * @return	boolean
 	 */
