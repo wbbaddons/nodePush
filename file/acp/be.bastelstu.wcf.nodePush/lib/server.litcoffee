@@ -272,8 +272,7 @@ Sends a message with the given name.
 				@stats.messages[name]++
 			
 			if userIDs.length
-				for userID in userIDs
-					@io.sockets.in("user#{userID}").send name
+				@io.sockets.in("user#{userID}").send name for userID in userIDs
 			else
 				@io.sockets.in('authenticated').send name
 
