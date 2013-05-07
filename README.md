@@ -10,7 +10,9 @@ nodePush is an open source push library for [WoltLab Community Framework](http:/
 $pushHandler = \wcf\system\nodePush\NodePushHandler::getInstance();
 
 if ($pushHandler->isRunning()) {
-	$pushHandler->sendMessage('hello');
+	// second parameter can contain an integer array with userIDs.
+	// when leaving it empty, the message will be sent to all connected clients.
+	$pushHandler->sendMessage('hello', array());
 }
 ?>
 ```
