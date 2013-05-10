@@ -33,12 +33,12 @@ In case not every configuration property is set we initialize it with a default 
 	config.outbound.useTCP ?= true
 	config.outbound.port ?= 9001
 	config.outbound.host ?= '0.0.0.0'
-	config.outbound.socket ?= __dirname + "/../outbound.sock"
+	config.outbound.socket ?= "#{__dirname}/../tmp/outbound.sock"
 	config.inbound ?= { }
 	config.inbound.useTCP ?= false
 	config.inbound.port ?= 9002
 	config.inbound.host ?= '127.0.0.1'
-	config.inbound.socket ?= __dirname + "/../inbound.sock"
+	config.inbound.socket ?= "#{__dirname}/../tmp/inbound.sock"
 	config.user ?= 'nobody'
 	config.group ?= 'nogroup'
 
