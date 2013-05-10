@@ -23,8 +23,19 @@ First we import the required packages and make them available in a global variab
 Next we try to load the configuration file "config.js".
 
 	try
-		config = require '../config.js'
+		filename = "#{__dirname}/../config.js"
+		if process.argv[2]
+			if process.argv[2].substring(0, 1) is '/'
+				filename = process.argv[2]
+			else
+				filename = "#{__dirname}/../#{process.argv[2]}"
+		
+		filename = fs.realpathSync filename
+		
+		console.log "Using config '#{filename}'"
+		config = require filename
 	catch e
+		console.warn e.message
 		config = { }
 
 In case not every configuration property is set we initialize it with a default property.
