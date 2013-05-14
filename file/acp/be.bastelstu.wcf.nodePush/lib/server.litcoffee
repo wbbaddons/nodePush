@@ -1,13 +1,12 @@
 nodePush Pushserver
 ===================
 
-Copyright Information
----------------------
-
-	"@author	Tim Düsterhus"
-	"@copyright	2012-2013 Tim Düsterhus"
-	"@license	BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>"
-	"@package	be.bastelstu.wcf.nodePush"
+	### Copyright Information
+	# @author	Tim Düsterhus
+	# @copyright	2012-2013 Tim Düsterhus
+	# @license	BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>
+	# @package	be.bastelstu.wcf.nodePush
+	###
 
 Setup
 -----
