@@ -45,6 +45,17 @@ foreach (glob('file/acp/be.bastelstu.wcf.nodePush/lib/*.{litcoffee,coffee}', GLO
 }
 echo <<<EOT
 
+Compressing JavaScript
+----------------------
+
+EOT;
+foreach (glob('file/js/*.js', GLOB_BRACE) as $jsFile) {
+	echo $jsFile."\n";
+	passthru('uglifyjs '.escapeshellarg($jsFile).' --screw-ie8 -m -c --verbose --comments -o '.escapeshellarg(substr($jsFile, 0, -3).'.min.js'), $code);
+	if ($code != 0) exit($code);
+}
+echo <<<EOT
+
 Checking PHP for Syntax Errors
 ------------------------------
 

@@ -111,8 +111,8 @@ Adds a new `callback` that will be called when the specified `message` is receiv
 on success and `false` otherwise.
 
 			onMessage: (message, callback) ->
-				false unless $.isFunction callback
-				false unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test message
+				return false unless $.isFunction callback
+				return false unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test message
 				
 				events.message[message] ?= $.Callbacks()
 				events.message[message].add callback
