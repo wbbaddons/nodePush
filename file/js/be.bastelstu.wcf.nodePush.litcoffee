@@ -1,5 +1,8 @@
-Frontend JavaScript for nodePush
-================================
+nodePush - Frontend
+===================
+
+This is the frontend JavaScript for [**nodePush**](https://github.com/wbbaddons/nodePush). It transparently handles
+everything that has to be done in order to connect to **nodePush** and provides a nice API for 3rd party developers.
 
 	### Copyright Information
 	# @author	Tim Düsterhus
@@ -8,21 +11,13 @@ Frontend JavaScript for nodePush
 	# @package	be.bastelstu.wcf.nodePush
 	###
 
-Setup
------
-Ensure sane values for `$` and `window`
+## Code
+We start by setting up our environment by ensuring some sane values for both `$` and `window`,
+enabling EMCAScript 5 strict mode and overwriting console to prepend the name of the class.
 
 	(($, window) ->
-		# Enable strict mode
 		"use strict";
 		
-		# Ensure our namespace is present
-		window.be ?= {}
-		be.bastelstu ?= {}
-		be.bastelstu.wcf ?= {}
-
-Overwrite `console` to add the origin in front of the message
-
 		console =
 			log: (message) ->
 				window.console.log "[be.bastelstu.wcf.nodePush] #{message}"
@@ -31,11 +26,8 @@ Overwrite `console` to add the origin in front of the message
 			error: (message) ->
 				window.console.error "[be.bastelstu.wcf.nodePush] #{message}"
 
-be.bastelstu.wcf.nodePush
-=========================
-
-Private Attributes
-------------------
+Continue with defining the needed variables. All variables are local to our closure and will be
+exposed by a function if necessary.
 
 		socket = null
 		connected = false
@@ -44,78 +36,80 @@ Private Attributes
 			connect: $.Callbacks()
 			disconnect: $.Callbacks()
 			message: { }
-		
-		be.bastelstu.wcf.nodePush = 
 
-Methods
--------
-
-**init(string host)**  
 Initialize socket.io to enable nodePush.
 
-			init: (host) ->
-				return if initialized
-				initialized = true
-				console.log 'Initializing nodePush'
-				
-				unless window.io?
-					console.error 'nodePush not available, aborting'
-					return
-					
-				socket = window.io.connect host
-				
-				socket.on 'connect', ->
-					console.log 'Connected to nodePush'
-					socket.emit 'userID', WCF.User.userID
-				
-				socket.on 'authenticated', ->
-					console.log 'Exchanged userID with nodePush'
-					connected = true
-					events.connect.fire()
-				
-				socket.on 'disconnect', ->
-					connected = false
-					console.warn 'Lost connection to nodePush'
-					events.disconnect.fire()
-				
-				socket.on 'message', (message) ->
-					return unless events.message[message]?
-					
-					events.message[message].fire()
-
-**boolean onConnect(Function callback)**  
-Adds a new `callback` that will be called when a connection to nodePush is established and the
-userID was exchanged. The given `callback` will be called once if a connection is established at
-time of calling. Returns `true` on success and `false` otherwise.
-
-			onConnect: (callback) ->
-				return false unless $.isFunction callback
-				
-				events.connect.add callback
-				
-				callback() if connected
-				true
-
-**boolean onDisconnect(Function callback)**  
-Adds a new `callback` that will be called when the connection to nodePush is lost. Returns `true`
-on success and `false` otherwise.
-
-			onDisconnect: (callback) ->
-				return false unless $.isFunction callback
-				
-				events.disconnect.add callback
-				true
-
-**boolean onMessage(string message, Function callback)**  
-Adds a new `callback` that will be called when the specified `message` is received. Returns `true`
-on success and `false` otherwise.
-
-			onMessage: (message, callback) ->
-				return false unless $.isFunction callback
-				return false unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test message
-				
-				events.message[message] ?= $.Callbacks()
-				events.message[message].add callback
-				true
+		init = (host) ->
+			return if initialized
+			initialized = true
+			console.log 'Initializing nodePush'
 			
+			unless window.io?
+				console.error 'nodePush not available, aborting'
+				return
+				
+			socket = window.io.connect host
+			
+			socket.on 'connect', ->
+				console.log 'Connected to nodePush'
+				socket.emit 'userID', WCF.User.userID
+			
+			socket.on 'authenticated', ->
+				console.log 'Exchanged userID with nodePush'
+				connected = true
+				events.connect.fire()
+			
+			socket.on 'disconnect', ->
+				connected = false
+				console.warn 'Lost connection to nodePush'
+				events.disconnect.fire()
+			
+			socket.on 'message', (message) ->
+				return unless events.message[message]?
+				
+				events.message[message].fire()
+
+Add a new `callback` that will be called when a connection to nodePush is established and the
+userID was exchanged. The given `callback` will be called once if a connection is established at
+time of calling. Return `true` on success and `false` otherwise.
+
+		onConnect = (callback) ->
+			return false unless $.isFunction callback
+			
+			events.connect.add callback
+			
+			callback() if connected
+			true
+
+Add a new `callback` that will be called when the connection to nodePush is lost. Return `true`
+on success and `false` otherwise.
+
+		onDisconnect = (callback) ->
+			return false unless $.isFunction callback
+			
+			events.disconnect.add callback
+			true
+
+Add a new `callback` that will be called when the specified `message` is received. Return `true`
+on success and `false` otherwise.
+
+		onMessage = (message, callback) ->
+			return false unless $.isFunction callback
+			return false unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test message
+			
+			events.message[message] ?= $.Callbacks()
+			events.message[message].add callback
+			true
+
+And finally export the public methods and variables.
+
+		window.be ?= {}
+		be.bastelstu ?= {}
+		be.bastelstu.wcf ?= {}
+		be.bastelstu.wcf.nodePush = 
+			init: init
+			onConnect: onConnect
+			onDisconnect: onDisconnect
+			onMessage: onMessage
+
 	)(jQuery, @)
