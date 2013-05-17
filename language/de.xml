@@ -8,8 +8,4 @@
 		<item name="wcf.acp.option.nodepush_socket"><![CDATA[Nachrichten-Adresse]]></item>
 		<item name="wcf.acp.option.nodepush_socket.description"><![CDATA[Geben Sie hier den Socket an, zu dem die Nachrichten gesendet werden sollen. Diese Angabe entspricht dem inbound-Socket vom Push-Server.]]></item>
 	</category>
-	
-	<category name="wcf.acp.index">
-		<item name="wcf.acp.index.health.nodePushDead"><![CDATA[Sie haben eine Adresse für den <a href="{@$__wcf->getPath()}acp/dereferrer.php?url={NODEPUSH_HOST|rawurlencode}" class="externalURL">Push-Server</a> angegeben, dieser scheint allerdings nicht korrekt gestartet zu sein.]]></item>
-	</category>
 </language>
