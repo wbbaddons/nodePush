@@ -141,7 +141,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 */
 	public function __destruct() {
 		foreach ($this->deferred as $data) {
-			$this->sendMessage($data['message'], $data['userIDs'], false);
+			$this->sendMessage($data['message'], $data['userIDs']);
 		}
 	}
 	
