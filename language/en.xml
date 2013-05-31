@@ -6,6 +6,6 @@
 		<item name="wcf.acp.option.nodepush_host.description"><![CDATA[The push server sends messages in real time to connected browsers. <br />
 <strong>Notice:</strong> Do not enter something unless you know how to start the push server. Do not enter a trailing slash (/)!]]></item>
 		<item name="wcf.acp.option.nodepush_socket"><![CDATA[Message Address]]></item>
-		<item name="wcf.acp.option.nodepush_socket.description"><![CDATA[Please enter the socket the messages will be delivered to. This settings has to match the inbound socket of the push server.]]></item>
+		<item name="wcf.acp.option.nodepush_socket.description"><![CDATA[Please enter the socket the messages will be delivered to. This setting has to match the inbound socket of the push server.]]></item>
 	</category>
 </language>
