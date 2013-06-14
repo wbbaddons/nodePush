@@ -74,7 +74,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 * Sends a message to the connected clients. Returns `true` on success and `false`
 	 * otherwise.
 	 * 
-	 * If `$userIDs` is an empty array the message will be set to every connected client. 
+	 * If `$userIDs` is an empty array the message will be sent to every connected client. 
 	 * Otherwise the message will only be sent to clients with the given userID.
 	 * 
 	 * ATTENTION: Do NOT (!) send any security related information via sendMessage.
@@ -112,7 +112,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	/**
 	 * Registers a deferred message. Returns `true` on any well-formed message and `false`
 	 * otherwise.
-	 * Deferred messages will be sent on shutdown. This can be useful if your handler depends
+	 * Deferred messages will be send on shutdown. This can be useful if your handler depends
 	 * on data that may not be written to database yet or to achieve a better performance as the
 	 * page is delivered first.
 	 * 
