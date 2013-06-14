@@ -57,6 +57,7 @@ We continue with creating some helper functions.
 	log = (message) ->
 		console.log "[be.bastelstu.wcf.nodePush] #{message}"
 	
+	# http://stackoverflow.com/a/6502556/782822
 	thousandsSeparator = (number) ->
 		String(number).replace /(^-?\d{1,3}|\d{3})(?=(?:\d{3})+(?:$|\.))/g, '$1,'
 	
