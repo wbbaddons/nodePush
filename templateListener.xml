@@ -5,8 +5,8 @@
 			<environment>user</environment>
 			<templatename>headInclude</templatename>
 			<eventname>javascriptInclude</eventname>
-			<templatecode><![CDATA[{if NODEPUSH_HOST}<script type="text/javascript" src="{NODEPUSH_HOST}/socket.io/socket.io.js"></script>{/if}
-<script type="text/javascript" src="{$__wcf->getPath()}js/be.bastelstu.wcf.nodePush{if !ENABLE_DEBUG_MODE}.min{/if}.js"></script>]]></templatecode>
+			<templatecode><![CDATA[{if NODEPUSH_HOST}<script src="{NODEPUSH_HOST}/socket.io/socket.io.js"></script>{/if}
+<script src="{$__wcf->getPath()}js/be.bastelstu.wcf.nodePush{if !ENABLE_DEBUG_MODE}.min{/if}.js"></script>]]></templatecode>
 		</templatelistener>
 		<templatelistener name="javascriptInit">
 			<environment>user</environment>
