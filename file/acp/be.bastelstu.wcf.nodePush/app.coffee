@@ -7,11 +7,11 @@
 
 express = require 'express'
 http = require 'http'
-io = require 'socket.io'
 net = require 'net'
 fs = require 'fs'
 path = require 'path'
 posix = require 'posix'
+io = null
 
 logger = new (require 'caterpillar').Logger
 	level: 6
@@ -158,41 +158,6 @@ server.on 'error', (e) ->
 	logger.log "emerg", 'Failed when initializing inbound socket'
 	logger.log "emerg", String e
 	process.exit 1
-io = io.listen server
-
-io.set 'log level', 1
-io.set 'browser client etag', true
-io.set 'browser client minification', true
-io.set 'browser client gzip', true
-
-io.configure 'development', ->
-	io.set 'log level', 3
-	io.set 'browser client etag', false
-	io.set 'browser client minification', false
-
-# handle connections to the websocket
-io.sockets.on 'connection', (socket) ->
-	logger.log "debug", "Client connected"
-	stats.outbound.total++ if (app.get 'env') is 'development'
-	stats.outbound.current++
-				
-	socket.on 'userID', (userID) ->
-		logger.log "debug", "Client sent userID"
-		socket.get 'userID', (_, currentUserID) ->
-			if currentUserID?
-				logger.log "notice", "Killing retarded client"
-
-				do socket.disconnect
-				return
-
-			socket.set 'userID', userID
-			socket.join 'authenticated'
-			socket.join "user#{userID}"
-			socket.emit 'authenticated'
-	
-			socket.on 'disconnect', ->
-				logger.log "debug", "Client disconnected"
-				stats.outbound.current--
 
 # show status page
 app.get '/', (req, res) ->
@@ -222,7 +187,7 @@ app.get '/', (req, res) ->
 
 # and finally start up everything
 initInbound ->
-	callback = 	->
+	callback = ->
 		if process.getuid? and (process.getuid() is 0 or process.getgid() is 0)
 			groupData = posix.getgrnam config.group
 			userData = posix.getpwnam config.user
@@ -257,7 +222,43 @@ initInbound ->
 				logger.log "emerg", e
 				logger.log "emerg", 'Cowardly refusing to keep the process alive as root.'
 				process.exit 1
-
+		
+		io = require 'socket.io'
+		io = io.listen server
+		io.set 'log level', 1
+		io.set 'browser client etag', true
+		io.set 'browser client minification', true
+		io.set 'browser client gzip', true if config.chroot is false
+		
+		io.configure 'development', ->
+			io.set 'log level', 3
+			io.set 'browser client etag', false
+			io.set 'browser client minification', false
+		
+		# handle connections to the websocket
+		io.sockets.on 'connection', (socket) ->
+			logger.log "debug", "Client connected"
+			stats.outbound.total++ if (app.get 'env') is 'development'
+			stats.outbound.current++
+			
+			socket.on 'userID', (userID) ->
+				logger.log "debug", "Client sent userID"
+				socket.get 'userID', (_, currentUserID) ->
+					if currentUserID?
+						logger.log "notice", "Killing retarded client"
+						
+						do socket.disconnect
+						return
+					
+					socket.set 'userID', userID
+					socket.join 'authenticated'
+					socket.join "user#{userID}"
+					socket.emit 'authenticated'
+					
+					socket.on 'disconnect', ->
+						logger.log "debug", "Client disconnected"
+						stats.outbound.current--
+		
 		setInterval =>
 			sendMessage 'be.bastelstu.wcf.nodePush.tick15'
 		, 15e3
