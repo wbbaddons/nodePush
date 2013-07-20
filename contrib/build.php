@@ -38,11 +38,6 @@ foreach (glob('file/js/*.{litcoffee,coffee}', GLOB_BRACE) as $coffeeFile) {
 	passthru('coffee -c '.escapeshellarg($coffeeFile), $code);
 	if ($code != 0) exit($code);
 }
-foreach (glob('file/acp/be.bastelstu.wcf.nodePush/lib/*.{litcoffee,coffee}', GLOB_BRACE) as $coffeeFile) {
-	echo $coffeeFile."\n";
-	passthru('coffee -c '.escapeshellarg($coffeeFile), $code);
-	if ($code != 0) exit($code);
-}
 echo <<<EOT
 
 Compressing JavaScript
@@ -83,7 +78,7 @@ Building file.tar
 -----------------
 
 EOT;
-	passthru('tar cvf ../file.tar --exclude=*coffee --exclude=*.scss --exclude=.sass-cache --exclude=node_modules -- *', $code);
+	passthru('tar cvf ../file.tar --exclude=file/js/*coffee --exclude=*.scss --exclude=.sass-cache --exclude=node_modules -- *', $code);
 	if ($code != 0) exit($code);
 echo <<<EOT
 

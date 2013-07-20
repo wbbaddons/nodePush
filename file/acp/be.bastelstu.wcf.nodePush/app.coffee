@@ -230,7 +230,7 @@ initInbound ->
 		io.set 'browser client minification', true
 		io.set 'browser client gzip', true if config.chroot is false
 		
-		io.configure 'development', ->
+		if (app.get 'env') is 'development'
 			io.set 'log level', 3
 			io.set 'browser client etag', false
 			io.set 'browser client minification', false
