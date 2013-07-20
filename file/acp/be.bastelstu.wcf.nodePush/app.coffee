@@ -216,8 +216,7 @@ initInbound ->
 				logger.log "info", "Trying to shed root privilegies to #{config.group}:#{config.user}"
 				posix.setregid groupData.gid, groupData.gid
 				posix.setreuid userData.uid, userData.uid
-				if posix.getuid() isnt userData.uid or posix.getgid() isnt groupData.gid
-					throw new Error 'We are not the user we expect us to be'
+				throw new Error 'We are not the user we expect us to be' if posix.getuid() isnt userData.uid or posix.getgid() isnt groupData.gid
 				logger.log "notice", "New User ID: #{posix.getuid()}, New Group ID: #{posix.getgid()}"
 			catch e
 				logger.log "emerg", e
@@ -259,23 +258,13 @@ initInbound ->
 					socket.on 'disconnect', ->
 						logger.log "debug", "Client disconnected"
 						stats.outbound.current--
-		
-		setInterval =>
-			sendMessage 'be.bastelstu.wcf.nodePush.tick15'
-		, 15e3
-		setInterval =>
-			sendMessage 'be.bastelstu.wcf.nodePush.tick30'
-		, 30e3
-		setInterval =>
-			sendMessage 'be.bastelstu.wcf.nodePush.tick60'
-		, 60e3
-		setInterval =>
-			sendMessage 'be.bastelstu.wcf.nodePush.tick90'
-		, 90e3
-		setInterval =>
-			sendMessage 'be.bastelstu.wcf.nodePush.tick120'
-		, 120e3
-		
+						
+		for intervalLength in [ 15, 30, 60, 90, 120 ]
+			do (intervalLength) ->
+				setInterval ->
+					sendMessage "be.bastelstu.wcf.nodePush.tick#{intervalLength}"
+				, intervalLength * 1e3
+				
 		logger.log "info", "Done"
 
 	if config.outbound.useTCP
