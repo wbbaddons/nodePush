@@ -13,5 +13,6 @@ module.exports = {
 	},
 	user: 'nobody',
 	group: 'nogroup',
-	chroot: __dirname
+	chroot: __dirname,
+	disableAutorestart: false # You want to set this to true, when you are not running nodemon
 }

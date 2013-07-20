@@ -53,6 +53,7 @@ config.inbound.useTCP ?= false
 config.inbound.port ?= 9002
 config.inbound.host ?= '127.0.0.1'
 config.inbound.socket ?= "#{__dirname}/tmp/inbound.sock"
+config.disableAutorestart = no
 config.user ?= 'nobody'
 config.group ?= 'nogroup'
 config.chroot ?= __dirname
@@ -85,7 +86,7 @@ sendMessage = (name, userIDs = [ ]) ->
 	
 	logger.log "debug", "#{name} -> #{userIDs.join ','}"
 
-	if name is 'be.bastelstu.wcf.nodePush._restart'
+	if name is 'be.bastelstu.wcf.nodePush._restart' and not config.disableAutorestart
 		process.kill process.pid, 'SIGUSR2'
 	
 	if (app.get 'env') is 'development'
