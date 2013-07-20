@@ -86,8 +86,8 @@ sendMessage = (name, userIDs = [ ]) ->
 	
 	logger.log "debug", "#{name} -> #{userIDs.join ','}"
 
-	if name is 'be.bastelstu.wcf.nodePush._restart' and not config.disableAutorestart
-		process.kill process.pid, 'SIGUSR2'
+	if name is 'be.bastelstu.wcf.nodePush._restart'
+		process.kill process.pid, 'SIGUSR2' unless config.disableAutorestart
 	
 	if (app.get 'env') is 'development'
 		stats.messages[name] ?= 0
@@ -102,10 +102,10 @@ sendMessage = (name, userIDs = [ ]) ->
 initInbound = (callback) ->
 	logger.log "debug", 'Initializing inbound socket'
 
-	socket = net.createServer (c) =>
+	socket = net.createServer (c) ->
 		stats.inbound++ if (app.get 'env') is 'development'
 
-		c.on 'data', (data) =>
+		c.on 'data', (data) ->
 			[ message, userIDs ] = data.toString().trim().split /:/
 			if userIDs? and userIDs.length
 				userIDs = userIDs.split /,/
@@ -113,7 +113,7 @@ initInbound = (callback) ->
 			else
 				userIDs = [ ]
 			
-			setTimeout =>
+			setTimeout ->
 				sendMessage message, userIDs
 			, 20
 
