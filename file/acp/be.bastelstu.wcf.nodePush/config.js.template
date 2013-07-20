@@ -12,5 +12,6 @@ module.exports = {
 		socket: __dirname + "/tmp/inbound.sock"
 	},
 	user: 'nobody',
-	group: 'nogroup'
+	group: 'nogroup',
+	chroot: __dirname
 }

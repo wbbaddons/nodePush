@@ -10,8 +10,18 @@
 	"author": "Tim Düsterhus <timwolla@bastelstu.be>",
 	"dependencies": {
 		"socket.io": "~0.8",
-		"express": "~3"
+		"express": "~3",
+		"caterpillar": "~2",
+		"caterpillar-human": "*",
+		"caterpillar-filter": "*",
+		"coffee-script": "> 1.4",
+		"nodemon": "*",
+		"posix": "*"
 	},
+	"scripts": {
+		"prestart": "npm install",
+		"start": "nodemon app.coffee"
+        },
 	"engines": { 
 		"node": ">=0.6.0",
 		"npm": ">=1.0"
