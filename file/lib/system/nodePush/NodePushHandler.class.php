@@ -63,8 +63,8 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 */
 	private function connect() {
 		if (StringUtil::startsWith($this->getSocketPath(), 'unix://')) {
-			if (!file_exists(StringUtil::substring($this->getSocketPath(), 7))) return false;
-			if (!is_writable(StringUtil::substring($this->getSocketPath(), 7))) return false;
+			if (!file_exists(mb_substr($this->getSocketPath(), 7))) return false;
+			if (!is_writable(mb_substr($this->getSocketPath(), 7))) return false;
 		}
 		
 		return stream_socket_client($this->getSocketPath(), $errno, $errstr, 1);
