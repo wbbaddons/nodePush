@@ -57,17 +57,17 @@ Initialize socket.io to enable nodePush.
 			socket.on 'authenticated', ->
 				console.log 'Exchanged userID with nodePush'
 				connected = true
-				events.connect.fire()
+				do events.connect.fire
 			
 			socket.on 'disconnect', ->
 				connected = false
 				console.warn 'Lost connection to nodePush'
-				events.disconnect.fire()
+				do events.disconnect.fire
 			
 			socket.on 'message', (message) ->
 				return unless events.message[message]?
 				
-				events.message[message].fire()
+				do events.message[message].fire
 
 Add a new `callback` that will be called when a connection to nodePush is established and the
 userID was exchanged. The given `callback` will be called once if a connection is established at
@@ -78,7 +78,10 @@ time of calling. Return `true` on success and `false` otherwise.
 			
 			events.connect.add callback
 			
-			callback() if connected
+			if connected
+				setTimeout ->
+					do callback
+				, 0
 			true
 
 Add a new `callback` that will be called when the connection to nodePush is lost. Return `true`
