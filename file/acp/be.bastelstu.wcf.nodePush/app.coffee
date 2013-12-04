@@ -137,12 +137,14 @@ cleanup = ->
 for signal in [ 'SIGINT', 'SIGTERM', 'SIGHUP' ]
 	do (signal) ->
 		process.once signal, ->
+			logger.log "info", "Received:", signal
 			do cleanup
 			do process.exit
 
 for signal in [ 'SIGUSR2' ]
 	do (signal) ->
 		process.once signal, ->
+			logger.log "info", "Received:", signal
 			do cleanup
 			process.kill process.pid, signal
 
