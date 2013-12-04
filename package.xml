@@ -4,8 +4,8 @@
 		<packagename><![CDATA[nodePush]]></packagename>
 		<packagedescription><![CDATA[Push service for WoltLab Community Framework™.]]></packagedescription>
 		<isapplication>0</isapplication>
-		<version>1.0.0 Alpha 1</version>
-		<date>2011-11-26</date>
+		<version>1.0.0 Beta 1</version>
+		<date>2013-12-04</date>
 		<license><![CDATA[BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>]]></license>
 	</packageinformation>
 	
