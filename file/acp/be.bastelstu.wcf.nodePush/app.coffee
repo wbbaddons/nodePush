@@ -25,21 +25,17 @@ process.title = "nodePush"
 
 # Try to load config
 try
-	filename = "#{__dirname}/config.js"
-
+	filename = "#{__dirname}/config"
+	
 	# configuration file was passed via `process.argv`
-	if process.argv[2]
-		if process.argv[2].substring(0, 1) is '/'
-			filename = process.argv[2]
-		else
-			filename = "#{__dirname}/#{process.argv[2]}"
+	filename = (require 'path').resolve process.argv[2] if process.argv[2]?
 	
 	filename = fs.realpathSync filename
 	
 	logger.log "info", "Using config '#{filename}'"
 	config = require filename
 catch e
-	logger.log "warn", e.message
+	logger.log "warn", """Cannot load config: #{e}"""
 	config = { }
 
 # default values for configuration
@@ -69,13 +65,13 @@ stats =
 	bootTime: new Date()
 
 if config.inbound.useTCP
-	logger.log "info", "Inbound: #{config.inbound.host}:#{config.inbound.port}"
+	logger.log "info", "Inbound-Socket: #{config.inbound.host}:#{config.inbound.port}"
 else
-	logger.log "info", "Inbound: #{config.inbound.socket}"
+	logger.log "info", "Inbound-Socket: #{config.inbound.socket}"
 if config.outbound.useTCP
-	logger.log "info", "Outbound: #{config.outbound.host}:#{config.outbound.port}"
+	logger.log "info", "Outbound-Socket: #{config.outbound.host}:#{config.outbound.port}"
 else
-	logger.log "info", "Outbound: #{config.outbound.socket}"
+	logger.log "info", "Outbound-Socket: #{config.outbound.socket}"
 
 # helper function (see http://stackoverflow.com/a/6502556/782822)
 thousandsSeparator = (number) -> String(number).replace /(^-?\d{1,3}|\d{3})(?=(?:\d{3})+(?:$|\.))/g, '$1,'
@@ -101,10 +97,10 @@ sendMessage = (name, userIDs = [ ]) ->
 # initialize the inbound (where we will receive the messages) socket
 initInbound = (callback) ->
 	logger.log "debug", 'Initializing inbound socket'
-
+	
 	socket = net.createServer (c) ->
 		stats.inbound++ if (app.get 'env') is 'development'
-
+		
 		c.on 'data', (data) ->
 			[ message, userIDs ] = data.toString().trim().split /:/
 			if userIDs? and userIDs.length
@@ -116,14 +112,13 @@ initInbound = (callback) ->
 			setTimeout ->
 				sendMessage message, userIDs
 			, 20
-
+			
 			do c.end
 			
 		c.on 'end', -> do c.end
 		c.setTimeout 5e3, -> do c.end
 	socket.on 'error', (e) ->
-		logger.log "emerg", 'Failed when initializing inbound socket'
-		logger.log "emerg", String e
+		logger.log "emerg", 'Failed when initializing inbound socket', e
 		process.exit 1
 	
 	if config.inbound.useTCP
@@ -156,8 +151,7 @@ logger.log "debug", 'Initializing outbound socket'
 app = do express
 server = http.createServer app
 server.on 'error', (e) ->
-	logger.log "emerg", 'Failed when initializing inbound socket'
-	logger.log "emerg", String e
+	logger.log "emerg", 'Failed when starting http: ', e
 	process.exit 1
 
 # show status page
@@ -189,27 +183,35 @@ app.get '/', (req, res) ->
 # and finally start up everything
 initInbound ->
 	callback = ->
+		# check whether we have to drop privileges
 		if process.getuid? and (process.getuid() is 0 or process.getgid() is 0)
+			# fetch numeric ID, as we cannot access it after chrooting
 			groupData = posix.getgrnam config.group
 			userData = posix.getpwnam config.user
-
+			
 			if config.chroot isnt false
 				try
 					logger.log "info", 'Trying to chroot'
+					# change into chroot
 					process.chdir config.chroot
+					# and apply it
 					posix.chroot config.chroot
 					logger.log "notice", "Successfully chrooted to #{config.chroot}"
+					
+					# check whether we'll be able to cleanup on shutdown
 					unless config.outbound.useTCP
 						config.outbound.socket = path.relative config.chroot, config.outbound.socket
+						
 						if (config.outbound.socket.indexOf '../') isnt -1
 							logger.log "warn", "I won't be able to cleanup the outbound socket"
 					unless config.inbound.useTCP
 						config.inbound.socket = path.relative config.chroot, config.inbound.socket
+						
 						if (config.inbound.socket.indexOf '../') isnt -1
 							logger.log "warn", "I won't be able to cleanup the inbound socket"
 				catch e
-					logger.log "crit", e
-					logger.log "crit", 'Failed to chroot'
+					# abort if chroot failed
+					logger.log "crit", 'Failed to chroot: ', e
 					process.exit 1
 			
 			try
@@ -219,10 +221,11 @@ initInbound ->
 				throw new Error 'We are not the user we expect us to be' if posix.getuid() isnt userData.uid or posix.getgid() isnt groupData.gid
 				logger.log "notice", "New User ID: #{posix.getuid()}, New Group ID: #{posix.getgid()}"
 			catch e
-				logger.log "emerg", e
-				logger.log "emerg", 'Cowardly refusing to keep the process alive as root.'
+				# abort if we are still root
+				logger.log "emerg", e, 'Cowardly refusing to keep the process alive as root.'
 				process.exit 1
 		
+		# initialize socket.io
 		io = require 'socket.io'
 		io = io.listen server
 		io.set 'log level', 1
@@ -244,6 +247,7 @@ initInbound ->
 			socket.on 'userID', (userID) ->
 				logger.log "debug", "Client sent userID"
 				socket.get 'userID', (_, currentUserID) ->
+					# client sent userID twice
 					if currentUserID?
 						logger.log "notice", "Killing retarded client"
 						
@@ -258,13 +262,15 @@ initInbound ->
 					socket.on 'disconnect', ->
 						logger.log "debug", "Client disconnected"
 						stats.outbound.current--
-						
+		
+		# initialize ticks
 		for intervalLength in [ 15, 30, 60, 90, 120 ]
 			do (intervalLength) ->
 				setInterval ->
 					sendMessage "be.bastelstu.wcf.nodePush.tick#{intervalLength}"
 				, intervalLength * 1e3
-				
+		
+		# everything ready
 		logger.log "info", "Done"
 
 	if config.outbound.useTCP
