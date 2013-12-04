@@ -15,7 +15,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	/**
 	 * Array of messages to send at shutdown.
 	 * 
-	 * @var	array
+	 * @var	array<string>
 	 */
 	private $deferred = array();
 	
