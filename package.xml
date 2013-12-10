@@ -3,7 +3,7 @@
 	<packageinformation>
 		<packagename><![CDATA[nodePush]]></packagename>
 		<packagedescription><![CDATA[nodePush provides an easy to use push server API.]]></packagedescription>
-		<packagedescription language="de">nodePush stellt ein einfach zu verwendendes Push-Server-API zur Verfügung.</packagedescription>
+		<packagedescription language="de"><![CDATA[nodePush stellt ein einfach zu verwendendes Push-Server-API zur Verfügung.]]></packagedescription>
 		<isapplication>0</isapplication>
 		<version>1.0.0 Beta 1</version>
 		<date>2013-12-04</date>
