@@ -5,8 +5,8 @@
 		<packagedescription><![CDATA[nodePush provides an easy to use push server API.]]></packagedescription>
 		<packagedescription language="de"><![CDATA[nodePush stellt ein einfach zu verwendendes Push-Server-API zur Verfügung.]]></packagedescription>
 		<isapplication>0</isapplication>
-		<version>1.0.0 Beta 1</version>
-		<date>2013-12-04</date>
+		<version>1.0.0 RC 1</version>
+		<date>2013-12-12</date>
 		<license><![CDATA[BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>]]></license>
 	</packageinformation>
 	
