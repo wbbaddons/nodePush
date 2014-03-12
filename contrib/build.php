@@ -46,7 +46,7 @@ Compressing JavaScript
 EOT;
 foreach (glob('file/js/*.js', GLOB_BRACE) as $jsFile) {
 	echo $jsFile."\n";
-	passthru('uglifyjs '.escapeshellarg($jsFile).' --screw-ie8 -m -c --verbose --comments -o '.escapeshellarg(substr($jsFile, 0, -3).'.min.js'), $code);
+	passthru('uglifyjs '.escapeshellarg($jsFile).' --screw-ie8 -m -c --verbose --comments -d production=true -o '.escapeshellarg(substr($jsFile, 0, -3).'.min.js'), $code);
 	if ($code != 0) exit($code);
 }
 echo <<<EOT
@@ -78,7 +78,7 @@ Building file.tar
 -----------------
 
 EOT;
-	passthru('tar cvf ../file.tar --exclude=file/js/*coffee --exclude=*.scss --exclude=.sass-cache --exclude=node_modules -- *', $code);
+	passthru('tar cvf ../file.tar --exclude=file/js/*coffee --exclude=node_modules -- *', $code);
 	if ($code != 0) exit($code);
 echo <<<EOT
 
