@@ -78,7 +78,7 @@ Building file.tar
 -----------------
 
 EOT;
-	passthru('tar cvf ../file.tar --exclude=file/js/*coffee --exclude=node_modules -- *', $code);
+	passthru('tar cvf ../file.tar --exclude=js/*coffee --exclude=node_modules -- *', $code);
 	if ($code != 0) exit($code);
 echo <<<EOT
 
