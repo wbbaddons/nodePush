@@ -246,6 +246,10 @@ initInbound ->
 			stats.outbound.total++ if (app.get 'env') is 'development'
 			stats.outbound.current++
 			
+			socket.on 'disconnect', ->
+				logger.log "debug", "Client disconnected"
+				stats.outbound.current--
+			
 			socket.on 'userID', (userID) ->
 				logger.log "debug", "Client sent userID"
 				socket.get 'userID', (_, currentUserID) ->
@@ -261,10 +265,6 @@ initInbound ->
 					socket.join "user#{userID}"
 					socket.emit 'authenticated'
 					
-					socket.on 'disconnect', ->
-						logger.log "debug", "Client disconnected"
-						stats.outbound.current--
-		
 		# initialize ticks
 		for intervalLength in [ 15, 30, 60, 90, 120 ]
 			do (intervalLength) ->
