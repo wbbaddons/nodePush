@@ -1,6 +1,6 @@
 ### Copyright Information
 # @author	Tim Düsterhus
-# @copyright	2012-2013 Tim Düsterhus
+# @copyright	2012-2014 Tim Düsterhus
 # @license	BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>
 # @package	be.bastelstu.wcf.nodePush
 ###
@@ -179,7 +179,6 @@ initInbound ->
 				chroot '/', config.user, config.group
 				logger.log "notice", "New User ID: #{process.getuid()}, New Group ID: #{process.getgid()}"
 			catch e
-				console.log e
 				logger.log "emerg", e, 'Cowardly refusing to keep the process alive as root.'
 				process.exit 1
 				
