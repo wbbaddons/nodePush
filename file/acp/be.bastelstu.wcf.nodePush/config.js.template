@@ -12,7 +12,5 @@ module.exports = {
 		socket: __dirname + "/tmp/inbound.sock"
 	},
 	user: 'nobody',
-	group: 'nogroup',
-	chroot: __dirname,
-	disableAutorestart: false // You want to set this to true, when you are not running nodemon
+	group: 'nogroup'
 }

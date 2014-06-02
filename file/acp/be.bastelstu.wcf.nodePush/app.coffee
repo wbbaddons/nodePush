@@ -5,12 +5,11 @@
 # @package	be.bastelstu.wcf.nodePush
 ###
 
+debug = (require 'debug')('nodePush')
 express = require 'express'
-http = require 'http'
 net = require 'net'
 fs = require 'fs'
-path = require 'path'
-posix = require 'posix'
+chroot = require 'chroot'
 io = null
 
 logger = new (require 'caterpillar').Logger
@@ -49,10 +48,8 @@ config.inbound.useTCP ?= false
 config.inbound.port ?= 9002
 config.inbound.host ?= '127.0.0.1'
 config.inbound.socket ?= "#{__dirname}/tmp/inbound.sock"
-config.disableAutorestart = no
 config.user ?= 'nobody'
 config.group ?= 'nogroup'
-config.chroot ?= __dirname
 
 # initialize statistics
 stats =
@@ -80,26 +77,23 @@ thousandsSeparator = (number) -> String(number).replace /(^-?\d{1,3}|\d{3})(?=(?
 sendMessage = (name, userIDs = [ ]) ->
 	return false unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test name
 	
-	logger.log "debug", "#{name} -> #{userIDs.join ','}"
-
-	if name is 'be.bastelstu.wcf.nodePush._restart'
-		process.kill process.pid, 'SIGUSR2' unless config.disableAutorestart
+	debug "#{name} -> #{userIDs.join ','}"
 	
-	if (app.get 'env') is 'development'
+	if debug.enabled
 		stats.messages[name] ?= 0
 		stats.messages[name]++
 	
 	if userIDs.length
-		(io.sockets.in "user#{userID}").send name for userID in userIDs
+		(io.to "user-#{userID}").send name for userID in userIDs
 	else
-		(io.sockets.in 'authenticated').send name
+		(io.to 'authenticated').send name
 
 # initialize the inbound (where we will receive the messages) socket
 initInbound = (callback) ->
-	logger.log "debug", 'Initializing inbound socket'
+	debug 'Initializing inbound socket'
 	
 	socket = net.createServer (c) ->
-		stats.inbound++ if (app.get 'env') is 'development'
+		stats.inbound++ if debug.enabled
 		
 		c.on 'data', (data) ->
 			[ message, userIDs ] = data.toString().trim().split /:/
@@ -130,40 +124,33 @@ initInbound = (callback) ->
 # try to clean up
 cleanup = ->
 	logger.log "info", "Cleaning up"
-
+	
 	fs.unlinkSync config.inbound.socket if not config.inbound.useTCP and fs.existsSync config.inbound.socket
 	fs.unlinkSync config.outbound.socket if not config.outbound.useTCP and fs.existsSync config.outbound.socket
 
 for signal in [ 'SIGINT', 'SIGTERM', 'SIGHUP' ]
-	do (signal) ->
-		process.once signal, ->
-			logger.log "info", "Received:", signal
-			do cleanup
-			do process.exit
+	do (signal) -> process.once signal, ->
+		logger.log "info", "Received:", signal
+		do cleanup
+		do process.exit
 
-for signal in [ 'SIGUSR2' ]
-	do (signal) ->
-		process.once signal, ->
-			logger.log "info", "Received:", signal
-			do cleanup
-			process.kill process.pid, signal
-
-logger.log "debug", 'Initializing outbound socket'
+debug 'Initializing outbound socket'
 
 app = do express
-server = http.createServer app
+app.use do (require 'cors')
+server = (require 'http').Server app
 server.on 'error', (e) ->
 	logger.log "emerg", 'Failed when starting http: ', e
 	process.exit 1
 
 # show status page
 app.get '/', (req, res) ->
-	logger.log "debug", "Status page hit"
-
+	debug "Status page hit"
+	
 	res.charset = 'utf-8';
 	res.type 'txt'
-
-	if (app.get 'env') is 'development'
+	
+	if debug.enabled
 		stats.status++
 		reply = """
 		Up since: #{stats.bootTime}
@@ -187,90 +174,38 @@ initInbound ->
 	callback = ->
 		# check whether we have to drop privileges
 		if process.getuid? and (process.getuid() is 0 or process.getgid() is 0)
-			# fetch numeric ID, as we cannot access it after chrooting
-			groupData = posix.getgrnam config.group
-			userData = posix.getpwnam config.user
-			
-			if config.chroot isnt false
-				try
-					logger.log "info", 'Trying to chroot'
-					# change into chroot
-					process.chdir config.chroot
-					# and apply it
-					posix.chroot config.chroot
-					logger.log "notice", "Successfully chrooted to #{config.chroot}"
-					
-					# check whether we'll be able to cleanup on shutdown
-					unless config.outbound.useTCP
-						config.outbound.socket = path.relative config.chroot, config.outbound.socket
-						
-						if (config.outbound.socket.indexOf '../') isnt -1
-							logger.log "warn", "I won't be able to cleanup the outbound socket"
-					unless config.inbound.useTCP
-						config.inbound.socket = path.relative config.chroot, config.inbound.socket
-						
-						if (config.inbound.socket.indexOf '../') isnt -1
-							logger.log "warn", "I won't be able to cleanup the inbound socket"
-				catch e
-					# abort if chroot failed
-					logger.log "crit", 'Failed to chroot: ', e
-					process.exit 1
-			
+			logger.log "info", 'Trying to switch user to', config.user, 'and group', config.group
 			try
-				logger.log "info", "Trying to shed root privilegies to #{config.group}:#{config.user}"
-				posix.setregid groupData.gid, groupData.gid
-				posix.setreuid userData.uid, userData.uid
-				throw new Error 'We are not the user we expect us to be' if posix.getuid() isnt userData.uid or posix.getgid() isnt groupData.gid
-				logger.log "notice", "New User ID: #{posix.getuid()}, New Group ID: #{posix.getgid()}"
+				chroot '/', config.user, config.group
+				logger.log "notice", "New User ID: #{process.getuid()}, New Group ID: #{process.getgid()}"
 			catch e
-				# abort if we are still root
+				console.log e
 				logger.log "emerg", e, 'Cowardly refusing to keep the process alive as root.'
 				process.exit 1
-		
+				
 		# initialize socket.io
-		io = require 'socket.io'
-		io = io.listen server
-		io.set 'log level', 1
-		io.set 'browser client etag', true
-		io.set 'browser client minification', true
-		io.set 'browser client gzip', true if config.chroot is false
-		
-		if (app.get 'env') is 'development'
-			io.set 'log level', 3
-			io.set 'browser client etag', false
-			io.set 'browser client minification', false
+		io = (require 'socket.io')(server)
 		
 		# handle connections to the websocket
-		io.sockets.on 'connection', (socket) ->
-			logger.log "debug", "Client connected"
-			stats.outbound.total++ if (app.get 'env') is 'development'
+		io.on 'connection', (socket) ->
+			debug "Client connected"
+			stats.outbound.total++ if debug.enabled
 			stats.outbound.current++
 			
 			socket.on 'disconnect', ->
-				logger.log "debug", "Client disconnected"
+				debug "Client disconnected"
 				stats.outbound.current--
 			
 			socket.on 'userID', (userID) ->
-				logger.log "debug", "Client sent userID"
-				socket.get 'userID', (_, currentUserID) ->
-					# client sent userID twice
-					if currentUserID?
-						logger.log "notice", "Killing retarded client"
-						
-						do socket.disconnect
-						return
-					
-					socket.set 'userID', userID
-					socket.join 'authenticated'
-					socket.join "user#{userID}"
-					socket.emit 'authenticated'
-					
+				debug "Client sent userID: #{userID}"
+				socket.join 'authenticated'
+				socket.join "user-#{userID}"
+				socket.emit 'authenticated'
+		
 		# initialize ticks
 		for intervalLength in [ 15, 30, 60, 90, 120 ]
 			do (intervalLength) ->
-				setInterval ->
-					sendMessage "be.bastelstu.wcf.nodePush.tick#{intervalLength}"
-				, intervalLength * 1e3
+				setInterval (-> sendMessage "be.bastelstu.wcf.nodePush.tick#{intervalLength}"), intervalLength * 1e3
 		
 		# everything ready
 		logger.log "info", "Done"

@@ -6,7 +6,7 @@ everything that has to be done in order to connect to **nodePush** and provides 
 
 	### Copyright Information
 	# @author	Tim Düsterhus
-	# @copyright	2012-2013 Tim Düsterhus
+	# @copyright	2012-2014 Tim Düsterhus
 	# @license	BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>
 	# @package	be.bastelstu.wcf.nodePush
 	###
@@ -48,7 +48,7 @@ Initialize socket.io to enable nodePush.
 				console.error 'nodePush not available, aborting'
 				return
 				
-			socket = window.io.connect host
+			socket = window.io host
 			
 			socket.on 'connect', ->
 				console.log 'Connected to nodePush'
