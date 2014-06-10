@@ -13,6 +13,7 @@
 				<optiontype>text</optiontype>
 				<defaultvalue><![CDATA[]]></defaultvalue>
 				<showorder>1</showorder>
+				<validationpattern>^(?:(?:https?:)?//|$)</validationpattern>
 			</option>
 			
 			<option name="nodepush_socket">
