@@ -10,7 +10,7 @@
 	"author": "Tim Düsterhus <tim@bastelstu.be>",
 	"dependencies": {
 		"socket.io": "~1.0",
-		"express": "~3",
+		"express": "~4",
 		"caterpillar": "~2",
 		"caterpillar-human": "*",
 		"caterpillar-filter": "*",
