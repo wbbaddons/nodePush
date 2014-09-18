@@ -7,12 +7,15 @@
 			<eventname>javascriptInclude</eventname>
 			<templatecode><![CDATA[{if NODEPUSH_HOST}<script data-relocate="true" src="{NODEPUSH_HOST}/socket.io/socket.io.js"></script>{/if}
 <script data-relocate="true" src="{$__wcf->getPath()}js/be.bastelstu.wcf.nodePush{if !ENABLE_DEBUG_MODE}.min{/if}.js"></script>]]></templatecode>
+			<nice>-99</nice>
 		</templatelistener>
+		
 		<templatelistener name="javascriptInit">
 			<environment>user</environment>
 			<templatename>headInclude</templatename>
 			<eventname>javascriptInit</eventname>
 			<templatecode><![CDATA[{if NODEPUSH_HOST}be.bastelstu.wcf.nodePush.init('{@NODEPUSH_HOST|encodeJS}');{/if}]]></templatecode>
+			<nice>-70</nice>
 		</templatelistener>
 	</import>
 </data>

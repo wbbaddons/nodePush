@@ -8,6 +8,13 @@
 		</categories>
 
 		<options>
+			<option name="push_backend">
+				<categoryname>general.system.nodePush</categoryname>
+				<optiontype>text</optiontype>
+				<defaultvalue><![CDATA[\wcf\system\nodePush\NodePushHandler]]></defaultvalue>
+				<hidden>1</hidden>
+			</option>
+			
 			<option name="nodepush_host">
 				<categoryname>general.system.nodePush</categoryname>
 				<optiontype>text</optiontype>

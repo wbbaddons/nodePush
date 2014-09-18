@@ -43,6 +43,7 @@ Initialize socket.io to enable nodePush.
 			return if initialized
 			initialized = true
 			console.log 'Initializing nodePush'
+			be.bastelstu.wcf.push.init be.bastelstu.wcf.nodePush
 			
 			unless window.io?
 				console.error 'nodePush not available, aborting'
