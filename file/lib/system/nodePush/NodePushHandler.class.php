@@ -3,7 +3,9 @@ namespace wcf\system\nodePush;
 use wcf\util\StringUtil;
 
 /**
- * Push Handler.
+ * DO NOT USE NodePushHandler DIRECTLY. USE:
+ * \wcf\system\push\PushHandler
+ * It uses the same API.
  *
  * @author	Tim Düsterhus
  * @copyright	2012-2013 Tim Düsterhus
@@ -20,19 +22,14 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	private $deferred = array();
 	
 	/**
-	 * Returns whether the push server is enabled (i.e. `NODEPUSH_HOST` is set).
-	 * 
-	 * @return	boolean
+	 * @see	\wcf\system\push\PushHandler::isEnabled()
 	 */
 	public function isEnabled() {
 		return (boolean) NODEPUSH_HOST;
 	}
 	
 	/**
-	 * Returns whether the push server appears running (i.e. one can connect to it).
-	 * Output may not 100% correct, but is pretty reliable.
-	 * 
-	 * @return	boolean
+	 * @see	\wcf\system\push\PushHandler::isRunning()
 	 */
 	public function isRunning() {
 		if (!$this->isEnabled()) return false;
@@ -71,18 +68,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	}
 	
 	/**
-	 * Sends a message to the connected clients. Returns `true` on success and `false`
-	 * otherwise.
-	 * 
-	 * If `$userIDs` is an empty array the message will be sent to every connected client. 
-	 * Otherwise the message will only be sent to clients with the given userID.
-	 * 
-	 * ATTENTION: Do NOT (!) send any security related information via sendMessage.
-	 * The userID given can easily be forged, by a malicious client!
-	 * 
-	 * @param	string			$message
-	 * @param	array<integer>	$userIDs
-	 * @return	boolean
+	 * @see	\wcf\system\push\PushHandler::sendMessage()
 	 */
 	public function sendMessage($message, $userIDs = array()) {
 		if (!$this->isEnabled()) return false;
@@ -110,18 +96,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	}
 	
 	/**
-	 * Registers a deferred message. Returns `true` on any well-formed message and `false`
-	 * otherwise.
-	 * Deferred messages will be sent on shutdown. This can be useful if your handler depends
-	 * on data that may not be written to database yet or to achieve a better performance as the
-	 * page is delivered first.
-	 * 
-	 * ATTENTION: Use this method only if your messages are not critical as you cannot check
-	 * whether your message was delivered successfully.
-	 * ATTENTION: Do NOT (!) send any security related information via sendDeferredMessage.
-	 * The userID given can easily be forged, by a malicious client!
-	 * 
-	 * @see	\wcf\system\nodePush\NodePushHandler::sendDeferredMessage()
+	 * @deprecated Use \wcf\system\push\PushHandler::sendDeferredMessage()
 	 */
 	public function sendDeferredMessage($message, $userIDs = array()) {
 		if (!$this->isEnabled()) return false;
@@ -137,7 +112,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	}
 	
 	/**
-	 * Sends out the deferred messages.
+	 * @deprecated See \wcf\system\nodePush\NodePushHandler::sendDeferredMessage()
 	 */
 	public function __destruct() {
 		foreach ($this->deferred as $data) {
@@ -146,9 +121,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	}
 	
 	/**
-	 * Returns the path to the "inbound" socket file.
-	 * 
-	 * @return	string
+	 * @deprecated Implementation detail, use PushHandler. This method will become private in the future.
 	 */
 	public function getSocketPath() {
 		return str_replace('{WCF_DIR}', WCF_DIR, NODEPUSH_SOCKET);

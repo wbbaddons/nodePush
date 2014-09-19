@@ -2,11 +2,11 @@
 <package name="be.bastelstu.wcf.nodePush" xmlns="http://www.woltlab.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.woltlab.com http://www.woltlab.com/XSD/maelstrom/package.xsd">
 	<packageinformation>
 		<packagename><![CDATA[nodePush]]></packagename>
-		<packagedescription><![CDATA[nodePush provides an easy to use push server API.]]></packagedescription>
-		<packagedescription language="de"><![CDATA[nodePush stellt ein einfach zu verwendendes Push-Server-API zur Verfügung.]]></packagedescription>
+		<packagedescription><![CDATA[nodePush is a node.js based backend for Push.]]></packagedescription>
+		<packagedescription language="de"><![CDATA[nodePush ist ein node.js-basiertes Backend für Push.]]></packagedescription>
 		<isapplication>0</isapplication>
-		<version>1.0.0</version>
-		<date>2014-06-10</date>
+		<version>1.1.0</version>
+		<date>2014-09-18</date>
 		<license><![CDATA[BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>]]></license>
 	</packageinformation>
 	
@@ -17,7 +17,12 @@
 	
 	<requiredpackages>
 		<requiredpackage minversion="2.0.0 Alpha 1">com.woltlab.wcf</requiredpackage>
+		<requiredpackage file="requirements/be.bastelstu.wcf.push.tar" minversion="1.0.0">be.bastelstu.wcf.push</requiredpackage>
 	</requiredpackages>
+	
+	<excludedpackages>
+		<excludedpackage version="*">be.bastelstu.wcf.pusher</excludedpackage>
+	</excludedpackages>
 	
 	<instructions type="install">
 		<instruction type="file">file.tar</instruction>
