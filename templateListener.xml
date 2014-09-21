@@ -14,7 +14,7 @@
 			<environment>user</environment>
 			<templatename>headInclude</templatename>
 			<eventname>javascriptInit</eventname>
-			<templatecode><![CDATA[{if NODEPUSH_HOST}be.bastelstu.wcf.nodePush.init('{@NODEPUSH_HOST|encodeJS}');{/if}]]></templatecode>
+			<templatecode><![CDATA[{if NODEPUSH_HOST}be.bastelstu.wcf.nodePush.init('{@NODEPUSH_HOST|encodeJS}', '{$nodePushSignedUserID|encodeJS}');{/if}]]></templatecode>
 			<nice>-70</nice>
 		</templatelistener>
 	</import>

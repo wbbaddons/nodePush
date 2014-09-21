@@ -39,7 +39,7 @@ exposed by a function if necessary.
 
 Initialize socket.io to enable nodePush.
 
-		init = (host) ->
+		init = (host, signedUserID) ->
 			return if initialized
 			initialized = true
 			console.log 'Initializing nodePush'
@@ -53,7 +53,7 @@ Initialize socket.io to enable nodePush.
 			
 			socket.on 'connect', ->
 				console.log 'Connected to nodePush'
-				socket.emit 'userID', WCF.User.userID
+				socket.emit 'userID', signedUserID
 			
 			socket.on 'authenticated', ->
 				console.log 'Exchanged userID with nodePush'

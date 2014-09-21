@@ -5,17 +5,14 @@
 # @package	be.bastelstu.wcf.nodePush
 ###
 
+winston = require 'winston'
 debug = (require 'debug')('nodePush')
 express = require 'express'
 net = require 'net'
 fs = require 'fs'
+crypto = require 'crypto'
 chroot = require 'chroot'
 io = null
-
-logger = new (require 'caterpillar').Logger
-	level: 6
-
-((logger.pipe new (require('caterpillar-filter').Filter)).pipe new (require('caterpillar-human').Human)).pipe process.stdout
 
 console.log "nodePush (pid:#{process.pid})"
 console.log "================" + Array(String(process.pid).length).join "="
@@ -31,10 +28,10 @@ try
 	
 	filename = fs.realpathSync filename
 	
-	logger.log "info", "Using config '#{filename}'"
+	debug "Using config '#{filename}'"
 	config = require filename
 catch e
-	logger.log "warn", """Cannot load config: #{e}"""
+	winston.warn "Could not find configuration file: ", e
 	config = { }
 
 # default values for configuration
@@ -50,6 +47,13 @@ config.inbound.host ?= '127.0.0.1'
 config.inbound.socket ?= "#{__dirname}/tmp/inbound.sock"
 config.user ?= 'nobody'
 config.group ?= 'nogroup'
+unless config.signerKey?
+	options_inc_php = fs.readFileSync "#{__dirname}/../../options.inc.php"
+	unless matches = /define\('SIGNER_SECRET', '(.*)'\);/.exec options_inc_php
+		throw new Error "Cannot find signer secret"
+	
+	config.signerKey = matches[1].replace("\\'", "'").replace("\\\\", "\\")
+	debug "Extracted #{config.signerKey} as Signer key"
 
 # initialize statistics
 stats =
@@ -62,16 +66,37 @@ stats =
 	bootTime: new Date()
 
 if config.inbound.useTCP
-	logger.log "info", "Inbound-Socket: #{config.inbound.host}:#{config.inbound.port}"
+	debug "Inbound-Socket: #{config.inbound.host}:#{config.inbound.port}"
 else
-	logger.log "info", "Inbound-Socket: #{config.inbound.socket}"
+	debug "Inbound-Socket: #{config.inbound.socket}"
 if config.outbound.useTCP
-	logger.log "info", "Outbound-Socket: #{config.outbound.host}:#{config.outbound.port}"
+	debug "Outbound-Socket: #{config.outbound.host}:#{config.outbound.port}"
 else
-	logger.log "info", "Outbound-Socket: #{config.outbound.socket}"
+	debug "Outbound-Socket: #{config.outbound.socket}"
 
 # helper function (see http://stackoverflow.com/a/6502556/782822)
 thousandsSeparator = (number) -> String(number).replace /(^-?\d{1,3}|\d{3})(?=(?:\d{3})+(?:$|\.))/g, '$1,'
+
+checkSignature = (data, key) ->
+	[ signature, payload ] = String(data).split /-/
+	
+	payload = new Buffer payload, 'base64'
+	if signature.length isnt 40
+		debug "Invalid signature #{data}"
+		return false
+	else
+		hmac = crypto.createHmac 'sha1', key
+		hmac.update payload
+		digest = hmac.digest 'hex'
+		
+		invalid = 0
+		invalid |= signature[i] ^ digest[i] for i in [0...40]
+		if invalid
+			debug "Invalid signature #{data}"
+			
+			false
+		else
+			payload
 
 # sends the given message to the given userIDs
 sendMessage = (name, userIDs = [ ]) ->
@@ -112,8 +137,7 @@ initInbound = (callback) ->
 		c.on 'end', -> do c.end
 		c.setTimeout 5e3, -> do c.end
 	socket.on 'error', (e) ->
-		logger.log "emerg", 'Failed when initializing inbound socket', e
-		process.exit 1
+		throw new Error "Failed when initializing inbound socket: #{e.message}"
 	
 	if config.inbound.useTCP
 		socket.listen config.inbound.port, config.inbound.host, null, callback
@@ -123,16 +147,20 @@ initInbound = (callback) ->
 
 # try to clean up
 cleanup = ->
-	logger.log "info", "Cleaning up"
+	debug "Cleaning up"
 	
 	fs.unlinkSync config.inbound.socket if not config.inbound.useTCP and fs.existsSync config.inbound.socket
 	fs.unlinkSync config.outbound.socket if not config.outbound.useTCP and fs.existsSync config.outbound.socket
 
 for signal in [ 'SIGINT', 'SIGTERM', 'SIGHUP' ]
 	do (signal) -> process.once signal, ->
-		logger.log "info", "Received:", signal
+		debug "Received: #{signal}"
 		do cleanup
 		do process.exit
+		
+process.once 'uncaughException', (e) ->
+	do cleanup
+	throw e
 
 debug 'Initializing outbound socket'
 
@@ -140,8 +168,7 @@ app = do express
 app.use do (require 'cors')
 server = (require 'http').Server app
 server.on 'error', (e) ->
-	logger.log "emerg", 'Failed when starting http: ', e
-	process.exit 1
+	throw new Error "Failed when starting http service: #{e.message}"
 
 # show status page
 app.get '/', (req, res) ->
@@ -174,13 +201,12 @@ initInbound ->
 	callback = ->
 		# check whether we have to drop privileges
 		if process.getuid? and (process.getuid() is 0 or process.getgid() is 0)
-			logger.log "info", 'Trying to switch user to', config.user, 'and group', config.group
+			debug "Trying to switch user to #{config.user} and group #{config.group}"
 			try
 				chroot '/', config.user, config.group
-				logger.log "notice", "New User ID: #{process.getuid()}, New Group ID: #{process.getgid()}"
+				debug "New User ID: #{process.getuid()}, New Group ID: #{process.getgid()}"
 			catch e
-				logger.log "emerg", e, 'Cowardly refusing to keep the process alive as root.'
-				process.exit 1
+				throw new Error "Cowardly refusing to keep the process alive as root: #{e.message}"
 				
 		# initialize socket.io
 		io = (require 'socket.io')(server)
@@ -197,8 +223,13 @@ initInbound ->
 			
 			socket.on 'userID', (userID) ->
 				debug "Client sent userID: #{userID}"
+				unless payload = checkSignature userID, config.signerKey
+					# nope
+					do socket.disconnect
+					return
+						
 				socket.join 'authenticated'
-				socket.join "user-#{userID}"
+				socket.join "user-#{payload}"
 				socket.emit 'authenticated'
 		
 		# initialize ticks
@@ -206,9 +237,8 @@ initInbound ->
 			do (intervalLength) ->
 				setInterval (-> sendMessage "be.bastelstu.wcf.nodePush.tick#{intervalLength}"), intervalLength * 1e3
 		
-		# everything ready
-		logger.log "info", "Done"
-
+		winston.info "Done"
+		
 	if config.outbound.useTCP
 		server.listen config.outbound.port, config.outbound.host, null, callback
 	else
