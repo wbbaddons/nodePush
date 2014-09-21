@@ -5,8 +5,8 @@
 		<packagedescription><![CDATA[nodePush is a node.js based backend for Push.]]></packagedescription>
 		<packagedescription language="de"><![CDATA[nodePush ist ein node.js-basiertes Backend für Push.]]></packagedescription>
 		<isapplication>0</isapplication>
-		<version>1.1.0</version>
-		<date>2014-09-18</date>
+		<version>1.2.0</version>
+		<date>2014-09-21</date>
 		<license><![CDATA[BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>]]></license>
 	</packageinformation>
 	
