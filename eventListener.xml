@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data xmlns="http://www.woltlab.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.woltlab.com http://www.woltlab.com/XSD/maelstrom/eventListener.xsd">
+	<import>
+		<eventlistener>
+			<eventclassname>wcf\system\template\TemplateEngine</eventclassname>
+			<eventname>beforeDisplay</eventname>
+			<listenerclassname>wcf\system\event\listener\TemplateEngineBeforeDisplayNodePushListener</listenerclassname>
+			<environment>user</environment>
+		</eventlistener>
+	</import>
+</data>

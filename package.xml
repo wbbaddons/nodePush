@@ -17,12 +17,14 @@
 	
 	<requiredpackages>
 		<requiredpackage minversion="2.0.0 Alpha 1">com.woltlab.wcf</requiredpackage>
+		<requiredpackage minversion="1.0.0">be.bastelstu.wcf.signer</requiredpackage>
 	</requiredpackages>
 	
 	<instructions type="install">
 		<instruction type="file">file.tar</instruction>
 		<instruction type="language">language/*.xml</instruction>
 		<instruction type="option">option.xml</instruction>
+		<instruction type="eventListener">eventListener.xml</instruction>
 		<instruction type="templateListener">templateListener.xml</instruction>
 	</instructions>
 	
@@ -30,6 +32,7 @@
 		<instruction type="file">file.tar</instruction>
 		<instruction type="language">language/*.xml</instruction>
 		<instruction type="option">option.xml</instruction>
+		<instruction type="eventListener">eventListener.xml</instruction>
 		<instruction type="templateListener">templateListener.xml</instruction>
 	</instructions>
 </package>

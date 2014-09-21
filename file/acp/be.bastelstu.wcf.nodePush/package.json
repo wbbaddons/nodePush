@@ -11,13 +11,11 @@
 	"dependencies": {
 		"socket.io": "~1.0",
 		"express": "~4",
-		"caterpillar": "~2",
-		"caterpillar-human": "*",
-		"caterpillar-filter": "*",
 		"coffee-script": "> 1.4",
 		"chroot": "0.1.7",
 		"debug": "~0.8",
-		"cors": "*"
+		"cors": "*",
+		"winston": "~0.8"
 	},
 	"scripts": {
 		"start": "coffee app.coffee"

@@ -12,5 +12,9 @@ module.exports = {
 		socket: __dirname + "/tmp/inbound.sock"
 	},
 	user: 'nobody',
-	group: 'nogroup'
+	group: 'nogroup',
+	// set this to the proper secret key of Signer
+	// nodePush *attempts* guess it, in case you don't
+	// if nodePush is unable to find the key it refuses to start
+	signerKey: undefined
 }
