@@ -80,6 +80,10 @@ thousandsSeparator = (number) -> String(number).replace /(^-?\d{1,3}|\d{3})(?=(?
 checkSignature = (data, key) ->
 	[ signature, payload ] = String(data).split /-/
 	
+	unless payload?
+		debug "Invalid signature #{data}"
+		return false
+		
 	payload = new Buffer payload, 'base64'
 	if signature.length isnt 40
 		debug "Invalid signature #{data}"
