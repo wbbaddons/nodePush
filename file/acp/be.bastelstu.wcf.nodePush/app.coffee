@@ -158,7 +158,7 @@ for signal in [ 'SIGINT', 'SIGTERM', 'SIGHUP' ]
 		do cleanup
 		do process.exit
 		
-process.once 'uncaughException', (e) ->
+process.once 'uncaughtException', (e) ->
 	do cleanup
 	throw e
 
