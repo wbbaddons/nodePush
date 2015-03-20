@@ -8,6 +8,10 @@
 panic = -> throw new Error "Cowardly refusing to keep the process alive as root"
 panic() if process.getuid?() is 0 or process.getgid?() is 0
 
+process.chdir __dirname
+serverVersion = (require './package.json').version
+(require 'child_process').exec 'git describe --always', (err, stdout, stderr) -> serverVersion = stdout.trim() unless err?
+
 winston = require 'winston'
 debug = (require 'debug')('nodePush')
 express = require 'express'
@@ -16,10 +20,7 @@ fs = require 'fs'
 crypto = require 'crypto'
 io = null
 
-console.log "nodePush (pid:#{process.pid})"
-console.log "================" + Array(String(process.pid).length).join "="
-
-process.title = "nodePush"
+console.log "nodePush #{serverVersion} (pid:#{process.pid})"
 
 config = require('rc') 'nodePush',
 	enableStats: no
@@ -30,6 +31,8 @@ config = require('rc') 'nodePush',
 		port: 9002
 		host: '127.0.0.1'
 	signerKey: null
+
+process.title = "nodePush #{config.inbound.host}:#{config.inbound.port}"
 
 unless config.signerKey?
 	options_inc_php = fs.readFileSync "#{__dirname}/../../options.inc.php"
