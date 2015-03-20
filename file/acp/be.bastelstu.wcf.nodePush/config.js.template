@@ -7,8 +7,6 @@ module.exports = {
 		port: 9002,
 		host: '127.0.0.1',
 	},
-	user: 'nobody',
-	group: 'nogroup',
 	// set this to the proper secret key of Signer
 	// nodePush *attempts* guess it, in case you don't
 	// if nodePush is unable to find the key it refuses to start

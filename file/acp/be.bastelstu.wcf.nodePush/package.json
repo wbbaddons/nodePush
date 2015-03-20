@@ -12,7 +12,6 @@
 		"socket.io": "~1",
 		"express": "~4",
 		"coffee-script": "> 1.4",
-		"chroot": "0.1.7",
 		"debug": "~0.8",
 		"cors": "*",
 		"winston": "~0.8"

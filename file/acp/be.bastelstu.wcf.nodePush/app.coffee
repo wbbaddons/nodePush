@@ -5,13 +5,15 @@
 # @package	be.bastelstu.wcf.nodePush
 ###
 
+panic = -> throw new Error "Cowardly refusing to keep the process alive as root"
+panic() if process.getuid?() is 0 or process.getgid?() is 0
+
 winston = require 'winston'
 debug = (require 'debug')('nodePush')
 express = require 'express'
 net = require 'net'
 fs = require 'fs'
 crypto = require 'crypto'
-chroot = require 'chroot'
 io = null
 
 console.log "nodePush (pid:#{process.pid})"
@@ -41,8 +43,7 @@ config.outbound.host ?= '0.0.0.0'
 config.inbound ?= { }
 config.inbound.port ?= 9002
 config.inbound.host ?= '127.0.0.1'
-config.user ?= 'nobody'
-config.group ?= 'nogroup'
+
 unless config.signerKey?
 	options_inc_php = fs.readFileSync "#{__dirname}/../../options.inc.php"
 	unless matches = /define\('SIGNER_SECRET', '(.*)'\);/.exec options_inc_php
@@ -172,15 +173,6 @@ app.get '/', (req, res) ->
 # and finally start up everything
 initInbound ->
 	server.listen config.outbound.port, config.outbound.host, null, ->
-		# check whether we have to drop privileges
-		if process.getuid? and (process.getuid() is 0 or process.getgid() is 0)
-			debug "Trying to switch user to #{config.user} and group #{config.group}"
-			try
-				chroot '/', config.user, config.group
-				debug "New User ID: #{process.getuid()}, New Group ID: #{process.getgid()}"
-			catch e
-				throw new Error "Cowardly refusing to keep the process alive as root: #{e.message}"
-
 		# initialize socket.io
 		io = (require 'socket.io')(server)
 		
