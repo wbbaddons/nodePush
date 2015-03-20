@@ -21,28 +21,15 @@ console.log "================" + Array(String(process.pid).length).join "="
 
 process.title = "nodePush"
 
-# Try to load config
-try
-	filename = "#{__dirname}/config"
-	
-	# configuration file was passed via `process.argv`
-	filename = (require 'path').resolve process.argv[2] if process.argv[2]?
-	
-	filename = fs.realpathSync filename
-	
-	debug "Using config '#{filename}'"
-	config = require filename
-catch e
-	winston.warn "Could not find configuration file: ", e
-	config = { }
-
-# default values for configuration
-config.outbound ?= { }
-config.outbound.port ?= 9001
-config.outbound.host ?= '0.0.0.0'
-config.inbound ?= { }
-config.inbound.port ?= 9002
-config.inbound.host ?= '127.0.0.1'
+config = require('rc') 'nodePush',
+	enableStats: no
+	outbound:
+		port: 9001
+		host: '0.0.0.0'
+	inbound:
+		port: 9002
+		host: '127.0.0.1'
+	signerKey: null
 
 unless config.signerKey?
 	options_inc_php = fs.readFileSync "#{__dirname}/../../options.inc.php"
@@ -94,9 +81,9 @@ checkSignature = (data, key) ->
 		if given.digest('hex') isnt calculated.digest('hex')
 			debug "Invalid signature #{data}"
 			
-			false
+			return false
 		else
-			payload
+			return payload
 
 # sends the given message to the given userIDs
 sendMessage = (name, userIDs = [ ]) ->
@@ -104,7 +91,7 @@ sendMessage = (name, userIDs = [ ]) ->
 	
 	debug "#{name} -> #{userIDs.join ','}"
 	
-	if debug.enabled
+	if config.enableStats
 		stats.messages[name] ?= 0
 		stats.messages[name]++
 	
@@ -118,7 +105,7 @@ initInbound = (callback) ->
 	debug 'Initializing inbound socket'
 	
 	socket = net.createServer (c) ->
-		stats.inbound++ if debug.enabled
+		stats.inbound++ if config.enableStats
 		
 		c.on 'data', (data) ->
 			[ message, userIDs ] = data.toString().trim().split /:/
@@ -156,7 +143,7 @@ app.get '/', (req, res) ->
 	res.charset = 'utf-8';
 	res.type 'txt'
 	
-	if debug.enabled
+	if config.enableStats
 		stats.status++
 		reply = """
 		Up since: #{stats.bootTime}
@@ -184,7 +171,7 @@ initInbound ->
 		# handle connections to the websocket
 		io.on 'connection', (socket) ->
 			debug "Client connected"
-			stats.outbound.total++ if debug.enabled
+			stats.outbound.total++ if config.enableStats
 			stats.outbound.current++
 			
 			socket.on 'disconnect', ->
@@ -193,6 +180,7 @@ initInbound ->
 			
 			socket.on 'userID', (userID) ->
 				debug "Client sent userID: #{userID}"
+				
 				unless payload = checkSignature userID, config.signerKey
 					# nope
 					do socket.disconnect
