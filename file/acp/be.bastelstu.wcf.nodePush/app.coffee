@@ -84,9 +84,14 @@ checkSignature = (data, key) ->
 		hmac.update payload
 		digest = hmac.digest 'hex'
 		
-		invalid = 0
-		invalid |= signature[i] ^ digest[i] for i in [0...40]
-		if invalid
+		# https://www.isecpartners.com/blog/2011/february/double-hmac-verification.aspx
+		given = crypto.createHmac 'sha1', key
+		given.update signature
+		
+		calculated = crypto.createHmac 'sha1', key
+		calculated.update digest
+		
+		if given.digest('hex') isnt calculated.digest('hex')
 			debug "Invalid signature #{data}"
 			
 			false
