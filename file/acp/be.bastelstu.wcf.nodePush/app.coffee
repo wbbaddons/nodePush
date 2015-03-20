@@ -1,6 +1,6 @@
 ### Copyright Information
 # @author	Tim Düsterhus
-# @copyright	2012-2014 Tim Düsterhus
+# @copyright	2012-2015 Tim Düsterhus
 # @license	BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>
 # @package	be.bastelstu.wcf.nodePush
 ###
@@ -36,15 +36,11 @@ catch e
 
 # default values for configuration
 config.outbound ?= { }
-config.outbound.useTCP ?= true
 config.outbound.port ?= 9001
 config.outbound.host ?= '0.0.0.0'
-config.outbound.socket ?= "#{__dirname}/tmp/outbound.sock"
 config.inbound ?= { }
-config.inbound.useTCP ?= false
 config.inbound.port ?= 9002
 config.inbound.host ?= '127.0.0.1'
-config.inbound.socket ?= "#{__dirname}/tmp/inbound.sock"
 config.user ?= 'nobody'
 config.group ?= 'nogroup'
 unless config.signerKey?
@@ -65,14 +61,8 @@ stats =
 	messages: { }
 	bootTime: new Date()
 
-if config.inbound.useTCP
-	debug "Inbound-Socket: #{config.inbound.host}:#{config.inbound.port}"
-else
-	debug "Inbound-Socket: #{config.inbound.socket}"
-if config.outbound.useTCP
-	debug "Outbound-Socket: #{config.outbound.host}:#{config.outbound.port}"
-else
-	debug "Outbound-Socket: #{config.outbound.socket}"
+debug "Inbound-Socket: #{config.inbound.host}:#{config.inbound.port}"
+debug "Outbound-Socket: #{config.outbound.host}:#{config.outbound.port}"
 
 # helper function (see http://stackoverflow.com/a/6502556/782822)
 thousandsSeparator = (number) -> String(number).replace /(^-?\d{1,3}|\d{3})(?=(?:\d{3})+(?:$|\.))/g, '$1,'
@@ -143,28 +133,7 @@ initInbound = (callback) ->
 	socket.on 'error', (e) ->
 		throw new Error "Failed when initializing inbound socket: #{e.message}"
 	
-	if config.inbound.useTCP
-		socket.listen config.inbound.port, config.inbound.host, null, callback
-	else
-		socket.listen config.inbound.socket, callback
-		fs.chmod config.inbound.socket, '777'
-
-# try to clean up
-cleanup = ->
-	debug "Cleaning up"
-	
-	fs.unlinkSync config.inbound.socket if not config.inbound.useTCP and fs.existsSync config.inbound.socket
-	fs.unlinkSync config.outbound.socket if not config.outbound.useTCP and fs.existsSync config.outbound.socket
-
-for signal in [ 'SIGINT', 'SIGTERM', 'SIGHUP' ]
-	do (signal) -> process.once signal, ->
-		debug "Received: #{signal}"
-		do cleanup
-		do process.exit
-		
-process.once 'uncaughtException', (e) ->
-	do cleanup
-	throw e
+	socket.listen config.inbound.port, config.inbound.host, null, callback
 
 debug 'Initializing outbound socket'
 
@@ -202,7 +171,7 @@ app.get '/', (req, res) ->
 
 # and finally start up everything
 initInbound ->
-	callback = ->
+	server.listen config.outbound.port, config.outbound.host, null, ->
 		# check whether we have to drop privileges
 		if process.getuid? and (process.getuid() is 0 or process.getgid() is 0)
 			debug "Trying to switch user to #{config.user} and group #{config.group}"
@@ -211,7 +180,7 @@ initInbound ->
 				debug "New User ID: #{process.getuid()}, New Group ID: #{process.getgid()}"
 			catch e
 				throw new Error "Cowardly refusing to keep the process alive as root: #{e.message}"
-				
+
 		# initialize socket.io
 		io = (require 'socket.io')(server)
 		
@@ -242,9 +211,3 @@ initInbound ->
 				setInterval (-> sendMessage "be.bastelstu.wcf.nodePush.tick#{intervalLength}"), intervalLength * 1e3
 		
 		winston.info "Done"
-		
-	if config.outbound.useTCP
-		server.listen config.outbound.port, config.outbound.host, null, callback
-	else
-		server.listen config.outbound.socket, callback
-		fs.chmod config.outbound.socket, '777'

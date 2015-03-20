@@ -8,7 +8,7 @@ use wcf\util\StringUtil;
  * It uses the same API.
  *
  * @author	Tim Düsterhus
- * @copyright	2012-2013 Tim Düsterhus
+ * @copyright	2012-2015 Tim Düsterhus
  * @license	BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>
  * @package	be.bastelstu.wcf.nodePush
  * @subpackage	system.nodePush
@@ -59,12 +59,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 * @return	boolean|resource
 	 */
 	private function connect() {
-		if (StringUtil::startsWith($this->getSocketPath(), 'unix://')) {
-			if (!file_exists(mb_substr($this->getSocketPath(), 7))) return false;
-			if (!is_writable(mb_substr($this->getSocketPath(), 7))) return false;
-		}
-		
-		return stream_socket_client($this->getSocketPath(), $errno, $errstr, 1);
+		return stream_socket_client(NODEPUSH_SOCKET, $errno, $errstr, 1);
 	}
 	
 	/**
@@ -118,12 +113,5 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 		foreach ($this->deferred as $data) {
 			$this->sendMessage($data['message'], $data['userIDs']);
 		}
-	}
-	
-	/**
-	 * @deprecated Implementation detail, use PushHandler. This method will become private in the future.
-	 */
-	public function getSocketPath() {
-		return str_replace('{WCF_DIR}', WCF_DIR, NODEPUSH_SOCKET);
 	}
 }
