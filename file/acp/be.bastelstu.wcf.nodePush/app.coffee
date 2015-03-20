@@ -12,7 +12,6 @@ process.chdir __dirname
 serverVersion = (require './package.json').version
 (require 'child_process').exec 'git describe --always', (err, stdout, stderr) -> serverVersion = stdout.trim() unless err?
 
-winston = require 'winston'
 debug = (require 'debug')('nodePush')
 express = require 'express'
 net = require 'net'
@@ -126,8 +125,7 @@ initInbound = (callback) ->
 			
 		c.on 'end', -> do c.end
 		c.setTimeout 5e3, -> do c.end
-	socket.on 'error', (e) ->
-		throw new Error "Failed when initializing inbound socket: #{e.message}"
+	socket.on 'error', (e) -> throw new Error "Failed when initializing inbound socket: #{e.message}"
 	
 	socket.listen config.inbound.port, config.inbound.host, null, callback
 
@@ -136,8 +134,7 @@ debug 'Initializing outbound socket'
 app = do express
 app.use do (require 'cors')
 server = (require 'http').Server app
-server.on 'error', (e) ->
-	throw new Error "Failed when starting http service: #{e.message}"
+server.on 'error', (e) -> throw new Error "Failed when starting http service: #{e.message}"
 
 # show status page
 app.get '/', (req, res) ->
@@ -198,4 +195,4 @@ initInbound ->
 			do (intervalLength) ->
 				setInterval (-> sendMessage "be.bastelstu.wcf.nodePush.tick#{intervalLength}"), intervalLength * 1e3
 		
-		winston.info "Done"
+		console.log "At your service"
