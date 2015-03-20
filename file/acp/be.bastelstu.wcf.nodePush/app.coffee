@@ -1,52 +1,38 @@
 ### Copyright Information
 # @author	Tim Düsterhus
-# @copyright	2012-2014 Tim Düsterhus
+# @copyright	2012-2015 Tim Düsterhus
 # @license	BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>
 # @package	be.bastelstu.wcf.nodePush
 ###
 
-winston = require 'winston'
+panic = -> throw new Error "Cowardly refusing to keep the process alive as root"
+panic() if process.getuid?() is 0 or process.getgid?() is 0
+
+process.chdir __dirname
+serverVersion = (require './package.json').version
+(require 'child_process').exec 'git describe --always', (err, stdout, stderr) -> serverVersion = stdout.trim() unless err?
+
 debug = (require 'debug')('nodePush')
 express = require 'express'
 net = require 'net'
 fs = require 'fs'
 crypto = require 'crypto'
-chroot = require 'chroot'
 io = null
 
-console.log "nodePush (pid:#{process.pid})"
-console.log "================" + Array(String(process.pid).length).join "="
+console.log "nodePush #{serverVersion} (pid:#{process.pid})"
 
-process.title = "nodePush"
+config = require('rc') 'nodePush',
+	enableStats: no
+	outbound:
+		port: 9001
+		host: '0.0.0.0'
+	inbound:
+		port: 9002
+		host: '127.0.0.1'
+	signerKey: null
 
-# Try to load config
-try
-	filename = "#{__dirname}/config"
-	
-	# configuration file was passed via `process.argv`
-	filename = (require 'path').resolve process.argv[2] if process.argv[2]?
-	
-	filename = fs.realpathSync filename
-	
-	debug "Using config '#{filename}'"
-	config = require filename
-catch e
-	winston.warn "Could not find configuration file: ", e
-	config = { }
+process.title = "nodePush #{config.inbound.host}:#{config.inbound.port}"
 
-# default values for configuration
-config.outbound ?= { }
-config.outbound.useTCP ?= true
-config.outbound.port ?= 9001
-config.outbound.host ?= '0.0.0.0'
-config.outbound.socket ?= "#{__dirname}/tmp/outbound.sock"
-config.inbound ?= { }
-config.inbound.useTCP ?= false
-config.inbound.port ?= 9002
-config.inbound.host ?= '127.0.0.1'
-config.inbound.socket ?= "#{__dirname}/tmp/inbound.sock"
-config.user ?= 'nobody'
-config.group ?= 'nogroup'
 unless config.signerKey?
 	options_inc_php = fs.readFileSync "#{__dirname}/../../options.inc.php"
 	unless matches = /define\('SIGNER_SECRET', '(.*)'\);/.exec options_inc_php
@@ -65,14 +51,8 @@ stats =
 	messages: { }
 	bootTime: new Date()
 
-if config.inbound.useTCP
-	debug "Inbound-Socket: #{config.inbound.host}:#{config.inbound.port}"
-else
-	debug "Inbound-Socket: #{config.inbound.socket}"
-if config.outbound.useTCP
-	debug "Outbound-Socket: #{config.outbound.host}:#{config.outbound.port}"
-else
-	debug "Outbound-Socket: #{config.outbound.socket}"
+debug "Inbound-Socket: #{config.inbound.host}:#{config.inbound.port}"
+debug "Outbound-Socket: #{config.outbound.host}:#{config.outbound.port}"
 
 # helper function (see http://stackoverflow.com/a/6502556/782822)
 thousandsSeparator = (number) -> String(number).replace /(^-?\d{1,3}|\d{3})(?=(?:\d{3})+(?:$|\.))/g, '$1,'
@@ -93,14 +73,19 @@ checkSignature = (data, key) ->
 		hmac.update payload
 		digest = hmac.digest 'hex'
 		
-		invalid = 0
-		invalid |= signature[i] ^ digest[i] for i in [0...40]
-		if invalid
+		# https://www.isecpartners.com/blog/2011/february/double-hmac-verification.aspx
+		given = crypto.createHmac 'sha1', key
+		given.update signature
+		
+		calculated = crypto.createHmac 'sha1', key
+		calculated.update digest
+		
+		if given.digest('hex') isnt calculated.digest('hex')
 			debug "Invalid signature #{data}"
 			
-			false
+			return false
 		else
-			payload
+			return payload
 
 # sends the given message to the given userIDs
 sendMessage = (name, userIDs = [ ]) ->
@@ -108,7 +93,7 @@ sendMessage = (name, userIDs = [ ]) ->
 	
 	debug "#{name} -> #{userIDs.join ','}"
 	
-	if debug.enabled
+	if config.enableStats
 		stats.messages[name] ?= 0
 		stats.messages[name]++
 	
@@ -122,7 +107,7 @@ initInbound = (callback) ->
 	debug 'Initializing inbound socket'
 	
 	socket = net.createServer (c) ->
-		stats.inbound++ if debug.enabled
+		stats.inbound++ if config.enableStats
 		
 		c.on 'data', (data) ->
 			[ message, userIDs ] = data.toString().trim().split /:/
@@ -140,39 +125,16 @@ initInbound = (callback) ->
 			
 		c.on 'end', -> do c.end
 		c.setTimeout 5e3, -> do c.end
-	socket.on 'error', (e) ->
-		throw new Error "Failed when initializing inbound socket: #{e.message}"
+	socket.on 'error', (e) -> throw new Error "Failed when initializing inbound socket: #{e.message}"
 	
-	if config.inbound.useTCP
-		socket.listen config.inbound.port, config.inbound.host, null, callback
-	else
-		socket.listen config.inbound.socket, callback
-		fs.chmod config.inbound.socket, '777'
-
-# try to clean up
-cleanup = ->
-	debug "Cleaning up"
-	
-	fs.unlinkSync config.inbound.socket if not config.inbound.useTCP and fs.existsSync config.inbound.socket
-	fs.unlinkSync config.outbound.socket if not config.outbound.useTCP and fs.existsSync config.outbound.socket
-
-for signal in [ 'SIGINT', 'SIGTERM', 'SIGHUP' ]
-	do (signal) -> process.once signal, ->
-		debug "Received: #{signal}"
-		do cleanup
-		do process.exit
-		
-process.once 'uncaughtException', (e) ->
-	do cleanup
-	throw e
+	socket.listen config.inbound.port, config.inbound.host, null, callback
 
 debug 'Initializing outbound socket'
 
 app = do express
 app.use do (require 'cors')
 server = (require 'http').Server app
-server.on 'error', (e) ->
-	throw new Error "Failed when starting http service: #{e.message}"
+server.on 'error', (e) -> throw new Error "Failed when starting http service: #{e.message}"
 
 # show status page
 app.get '/', (req, res) ->
@@ -181,7 +143,7 @@ app.get '/', (req, res) ->
 	res.charset = 'utf-8';
 	res.type 'txt'
 	
-	if debug.enabled
+	if config.enableStats
 		stats.status++
 		reply = """
 		Up since: #{stats.bootTime}
@@ -202,23 +164,14 @@ app.get '/', (req, res) ->
 
 # and finally start up everything
 initInbound ->
-	callback = ->
-		# check whether we have to drop privileges
-		if process.getuid? and (process.getuid() is 0 or process.getgid() is 0)
-			debug "Trying to switch user to #{config.user} and group #{config.group}"
-			try
-				chroot '/', config.user, config.group
-				debug "New User ID: #{process.getuid()}, New Group ID: #{process.getgid()}"
-			catch e
-				throw new Error "Cowardly refusing to keep the process alive as root: #{e.message}"
-				
+	server.listen config.outbound.port, config.outbound.host, null, ->
 		# initialize socket.io
 		io = (require 'socket.io')(server)
 		
 		# handle connections to the websocket
 		io.on 'connection', (socket) ->
 			debug "Client connected"
-			stats.outbound.total++ if debug.enabled
+			stats.outbound.total++ if config.enableStats
 			stats.outbound.current++
 			
 			socket.on 'disconnect', ->
@@ -227,6 +180,7 @@ initInbound ->
 			
 			socket.on 'userID', (userID) ->
 				debug "Client sent userID: #{userID}"
+				
 				unless payload = checkSignature userID, config.signerKey
 					# nope
 					do socket.disconnect
@@ -241,10 +195,4 @@ initInbound ->
 			do (intervalLength) ->
 				setInterval (-> sendMessage "be.bastelstu.wcf.nodePush.tick#{intervalLength}"), intervalLength * 1e3
 		
-		winston.info "Done"
-		
-	if config.outbound.useTCP
-		server.listen config.outbound.port, config.outbound.host, null, callback
-	else
-		server.listen config.outbound.socket, callback
-		fs.chmod config.outbound.socket, '777'
+		console.log "At your service"
