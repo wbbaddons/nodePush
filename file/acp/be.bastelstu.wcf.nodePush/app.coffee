@@ -34,10 +34,12 @@ config = require('rc') 'nodePush',
 process.title = "nodePush #{config.inbound.host}:#{config.inbound.port}"
 
 unless config.signerKey?
-	options_inc_php = fs.readFileSync "#{__dirname}/../../options.inc.php"
-	unless matches = /define\('SIGNER_SECRET', '(.*)'\);/.exec options_inc_php
-		throw new Error "Cannot find signer secret"
-	
+	try
+		options_inc_php = fs.readFileSync "#{__dirname}/../../options.inc.php"
+		unless matches = /define\('SIGNER_SECRET', '(.*)'\);/.exec options_inc_php
+			throw new Error "options.inc.php does not contain the SIGNER_SECRET option."
+	catch e
+		throw new Error "Cannot find signer secret: #{e}"
 	config.signerKey = matches[1].replace("\\'", "'").replace("\\\\", "\\")
 	debug "Extracted #{config.signerKey} as Signer key"
 
