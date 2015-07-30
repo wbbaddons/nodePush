@@ -8,6 +8,7 @@
 		"woltlab community framework"
 	],
 	"author": "Tim Düsterhus <tim@bastelstu.be>",
+	"license": "AGPL-3.0",
 	"dependencies": {
 		"socket.io": "~1",
 		"express": "~4",
