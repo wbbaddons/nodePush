@@ -24,4 +24,7 @@
 			</option>
 		</options>
 	</import>
+	<delete>
+		<option name="nodepush_socket" />
+	</delete>
 </data>

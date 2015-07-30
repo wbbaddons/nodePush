@@ -5,8 +5,8 @@
 		<packagedescription><![CDATA[nodePush is a node.js based backend for Push.]]></packagedescription>
 		<packagedescription language="de"><![CDATA[nodePush ist ein node.js-basiertes Backend für Push.]]></packagedescription>
 		<isapplication>0</isapplication>
-		<version>2.0.0</version>
-		<date>2014-09-21</date>
+		<version>2.0.0 Beta 2</version>
+		<date>2015-07-30</date>
 		<license><![CDATA[BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>]]></license>
 	</packageinformation>
 	
@@ -33,7 +33,7 @@
 		<instruction type="templateListener">templateListener.xml</instruction>
 	</instructions>
 	
-	<instructions type="update" fromversion="*">
+	<instructions type="update" fromversion="2.0.0*">
 		<instruction type="file">file.tar</instruction>
 		<instruction type="language">language/*.xml</instruction>
 		<instruction type="option">option.xml</instruction>
