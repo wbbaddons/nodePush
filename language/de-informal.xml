@@ -4,8 +4,6 @@
 		<item name="wcf.acp.option.category.general.system.nodePush"><![CDATA[Push-Server]]></item>
 		<item name="wcf.acp.option.nodepush_host"><![CDATA[Push-Server-Host (nodePush)]]></item>
 		<item name="wcf.acp.option.nodepush_host.description"><![CDATA[Der Push-Server dient dazu, verschiedene Meldungen in Echtzeit an den Browser zu übergeben. <br />
-<strong>Hinweis:</strong> Setze diese Einstellung nur, wenn du weißt, was sie bewirkt. Die Adresse wird mit dem entsprechenden Protokoll („http://“, „https://“ oder „//“) und ohne abschließenden Slash (/) angegeben.]]></item>
-		<item name="wcf.acp.option.nodepush_socket"><![CDATA[Nachrichten-Adresse]]></item>
-		<item name="wcf.acp.option.nodepush_socket.description"><![CDATA[Gib hier den Socket an, zu dem die Nachrichten gesendet werden sollen. Diese Angabe entspricht dem inbound-Socket vom Push-Server.]]></item>
+<strong>Hinweis:</strong> Setze diese Einstellung nur, wenn du weißt, was sie bewirkt. Die Adresse wird mit dem entsprechenden Protokoll („http://“, „https://“) und ohne abschließenden Slash (/) angegeben.]]></item>
 	</category>
 </language>

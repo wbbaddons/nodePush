@@ -71,23 +71,22 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 		$userIDs = array_unique(\wcf\util\ArrayUtil::toIntegerArray($userIDs));
 		
 		try {
-			$sock = $this->connect();
-			if ($sock === false) return false;
-			
-			$success = fwrite($sock, $message.($userIDs ? ':'.implode(',', $userIDs) : ''));
-			fclose($sock);
+			$http = new \wcf\util\HTTPRequest(NODEPUSH_HOST.'/deliver', array(
+				'timeout' => 2,
+				'method' => 'POST'
+			), \wcf\util\Signer::createSignedString(
+				\wcf\util\JSON::encode(array(
+					'message' => $message,
+					'userIDs' => $userIDs
+				))
+			));
+			$http->addHeader('content-type', 'application/octet-stream');
+			$http->execute();
+			return true;
 		}
 		catch (\Exception $e) {
-			// gotta catch 'em all
-			try {
-				if (is_resource($sock)) fclose($sock);
-			}
-			catch (\Exception $e) { }
-			
 			return false;
 		}
-		
-		return (boolean) $success;
 	}
 	
 	/**

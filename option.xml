@@ -22,13 +22,6 @@
 				<showorder>1</showorder>
 				<validationpattern>^(?:(?:https?:)?//|$)</validationpattern>
 			</option>
-			
-			<option name="nodepush_socket">
-				<categoryname>general.system.nodePush</categoryname>
-				<optiontype>text</optiontype>
-				<defaultvalue><![CDATA[tcp://127.0.0.1:9002]]></defaultvalue>
-				<showorder>2</showorder>
-			</option>
 		</options>
 	</import>
 </data>

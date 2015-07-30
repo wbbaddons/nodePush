@@ -26,12 +26,9 @@ config = require('rc') 'nodePush',
 	outbound:
 		port: 9001
 		host: '0.0.0.0'
-	inbound:
-		port: 9002
-		host: '127.0.0.1'
 	signerKey: null
 
-process.title = "nodePush #{config.inbound.host}:#{config.inbound.port}"
+process.title = "nodePush #{config.outbound.host}:#{config.outbound.port}"
 
 unless config.signerKey?
 	try
@@ -53,7 +50,6 @@ stats =
 	messages: { }
 	bootTime: new Date()
 
-debug "Inbound-Socket: #{config.inbound.host}:#{config.inbound.port}"
 debug "Outbound-Socket: #{config.outbound.host}:#{config.outbound.port}"
 
 # helper function (see http://stackoverflow.com/a/6502556/782822)
@@ -103,38 +99,10 @@ sendMessage = (name, userIDs = [ ]) ->
 		(io.to "user-#{userID}").send name for userID in userIDs
 	else
 		(io.to 'authenticated').send name
-
-# initialize the inbound (where we will receive the messages) socket
-initInbound = (callback) ->
-	debug 'Initializing inbound socket'
-	
-	socket = net.createServer (c) ->
-		stats.inbound++ if config.enableStats
-		
-		c.on 'data', (data) ->
-			[ message, userIDs ] = data.toString().trim().split /:/
-			if userIDs? and userIDs.length
-				userIDs = userIDs.split /,/
-				userIDs = (parseInt userID for userID in userIDs when not isNaN parseInt userID)
-			else
-				userIDs = [ ]
-			
-			setTimeout ->
-				sendMessage message, userIDs
-			, 20
-			
-			do c.end
-			
-		c.on 'end', -> do c.end
-		c.setTimeout 5e3, -> do c.end
-	socket.on 'error', (e) -> throw new Error "Failed when initializing inbound socket: #{e.message}"
-	
-	socket.listen config.inbound.port, config.inbound.host, null, callback
-
-debug 'Initializing outbound socket'
-
+	true
 app = do express
 app.use do (require 'cors')
+app.use do (require 'body-parser').raw
 server = (require 'http').Server app
 server.on 'error', (e) -> throw new Error "Failed when starting http service: #{e.message}"
 
@@ -164,37 +132,64 @@ app.get '/', (req, res) ->
 	
 	res.send reply
 
+app.post '/deliver', (req, res) ->
+	stats.inbound++ if config.enableStats
+	
+	unless payload = checkSignature req.body, config.signerKey
+		res.sendStatus 400
+		return
+	try
+		payload = JSON.parse payload
+	catch e
+		debug "Error parsing JSON: #{e}"
+		res.sendStatus 400
+		return
+	
+	unless payload.message?
+		res.sendStatus 400
+		return
+	unless payload.userIDs?
+		res.sendStatus 400
+		return
+		
+	message = payload.message
+	userIDs = payload.userIDs.map (item) -> parseInt item, 10
+	
+	if sendMessage message, userIDs
+		res.sendStatus 201
+	else
+		res.sendStatus 400
+
 # and finally start up everything
-initInbound ->
-	server.listen config.outbound.port, config.outbound.host, null, ->
-		# initialize socket.io
-		io = (require 'socket.io')(server)
+server.listen config.outbound.port, config.outbound.host, null, ->
+	# initialize socket.io
+	io = (require 'socket.io')(server)
+	
+	# handle connections to the websocket
+	io.on 'connection', (socket) ->
+		debug "Client connected"
+		stats.outbound.total++ if config.enableStats
+		stats.outbound.current++
 		
-		# handle connections to the websocket
-		io.on 'connection', (socket) ->
-			debug "Client connected"
-			stats.outbound.total++ if config.enableStats
-			stats.outbound.current++
+		socket.on 'disconnect', ->
+			debug "Client disconnected"
+			stats.outbound.current--
+		
+		socket.on 'userID', (userID) ->
+			debug "Client sent userID: #{userID}"
 			
-			socket.on 'disconnect', ->
-				debug "Client disconnected"
-				stats.outbound.current--
-			
-			socket.on 'userID', (userID) ->
-				debug "Client sent userID: #{userID}"
-				
-				unless payload = checkSignature userID, config.signerKey
-					# nope
-					do socket.disconnect
-					return
-						
-				socket.join 'authenticated'
-				socket.join "user-#{payload}"
-				socket.emit 'authenticated'
-		
-		# initialize ticks
-		for intervalLength in [ 15, 30, 60, 90, 120 ]
-			do (intervalLength) ->
-				setInterval (-> sendMessage "be.bastelstu.wcf.nodePush.tick#{intervalLength}"), intervalLength * 1e3
-		
-		console.log "At your service"
+			unless payload = checkSignature userID, config.signerKey
+				# nope
+				do socket.disconnect
+				return
+					
+			socket.join 'authenticated'
+			socket.join "user-#{payload}"
+			socket.emit 'authenticated'
+	
+	# initialize ticks
+	for intervalLength in [ 15, 30, 60, 90, 120 ]
+		do (intervalLength) ->
+			setInterval (-> sendMessage "be.bastelstu.wcf.nodePush.tick#{intervalLength}"), intervalLength * 1e3
+	
+	console.log "At your service"
