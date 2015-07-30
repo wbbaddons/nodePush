@@ -5,8 +5,20 @@
 			<environment>user</environment>
 			<templatename>headInclude</templatename>
 			<eventname>javascriptInclude</eventname>
-			<templatecode><![CDATA[{if NODEPUSH_HOST}<script data-relocate="true" src="{NODEPUSH_HOST}/socket.io/socket.io.js"></script>{/if}
-<script data-relocate="true" src="{$__wcf->getPath()}js/be.bastelstu.wcf.nodePush{if !ENABLE_DEBUG_MODE}.min{/if}.js"></script>]]></templatecode>
+			<templatecode><![CDATA[{if 'MAIL_SMTP_STARTTLS'|defined}
+<script data-relocate="true">
+	require(['{NODEPUSH_HOST|encodeJS}/socket.io/socket.io.js'], function (io) {
+		window.io = io;
+		
+		require(['be.bastelstu.wcf.nodePush{if !ENABLE_DEBUG_MODE}.min{/if}'], function (nodePush) {
+			be.bastelstu.wcf.nodePush.init('{@NODEPUSH_HOST|encodeJS}', '{$nodePushSignedUserID|encodeJS}');
+		});
+	});
+</script>
+{else}
+{if NODEPUSH_HOST}<script data-relocate="true" src="{NODEPUSH_HOST}/socket.io/socket.io.js"></script>{/if}
+<script data-relocate="true" src="{$__wcf->getPath()}js/be.bastelstu.wcf.nodePush{if !ENABLE_DEBUG_MODE}.min{/if}.js"></script>
+{/if}]]></templatecode>
 			<nice>-99</nice>
 		</templatelistener>
 		
@@ -14,7 +26,7 @@
 			<environment>user</environment>
 			<templatename>headInclude</templatename>
 			<eventname>javascriptInit</eventname>
-			<templatecode><![CDATA[{if NODEPUSH_HOST}be.bastelstu.wcf.nodePush.init('{@NODEPUSH_HOST|encodeJS}', '{$nodePushSignedUserID|encodeJS}');{/if}]]></templatecode>
+			<templatecode><![CDATA[{if NODEPUSH_HOST && !'MAIL_SMTP_STARTTLS'|defined}be.bastelstu.wcf.nodePush.init('{@NODEPUSH_HOST|encodeJS}', '{$nodePushSignedUserID|encodeJS}');{/if}]]></templatecode>
 			<nice>-70</nice>
 		</templatelistener>
 	</import>
