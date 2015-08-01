@@ -63,13 +63,10 @@ Initialize socket.io to enable nodePush.
 			socket.on 'disconnect', ->
 				connected = false
 				console.warn 'Lost connection to nodePush'
-				do events.disconnect.fire
 			
-			socket.on 'message', (message) ->
-				return unless events.message[message]?
+			for key, value of events.message
+				socket.on key, -> do events.message[message].fire
 				
-				do events.message[message].fire
-
 Add a new `callback` that will be called when a connection to nodePush is established and the
 userID was exchanged. The given `callback` will be called once if a connection is established at
 time of calling. Return `true` on success and `false` otherwise.
@@ -101,8 +98,12 @@ on success and `false` otherwise.
 			return false unless $.isFunction callback
 			return false unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test message
 			
-			events.message[message] ?= $.Callbacks()
+			unless events.message[message]?
+				events.message[message] = $.Callbacks()
+				if socket?
+					socket.on message, -> do events.message[message].fire
 			events.message[message].add callback
+			
 			true
 
 And finally export the public methods and variables.

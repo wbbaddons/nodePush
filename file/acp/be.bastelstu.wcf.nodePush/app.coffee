@@ -105,9 +105,9 @@ sendMessage = (name, userIDs = [ ]) ->
 		stats.messages[name]++
 	
 	if userIDs.length
-		(io.to "user-#{userID}").send name for userID in userIDs
+		(io.to "user-#{userID}").emit name for userID in userIDs
 	else
-		(io.to 'authenticated').send name
+		(io.to 'authenticated').emit name
 	true
 
 app = do express
