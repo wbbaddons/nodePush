@@ -21,6 +21,7 @@ serverVersion = (require './package.json').version
 (require 'child_process').exec 'git describe --always', (err, stdout, stderr) -> serverVersion = stdout.trim() unless err?
 
 debug = (require 'debug')('nodePush')
+escapeRegExp = require 'escape-string-regexp'
 express = require 'express'
 net = require 'net'
 fs = require 'fs'
@@ -108,9 +109,11 @@ sendMessage = (name, userIDs = [ ]) ->
 	else
 		(io.to 'authenticated').send name
 	true
+
 app = do express
 app.use do (require 'cors')
 app.use do (require 'body-parser').raw
+
 server = (require 'http').Server app
 server.on 'error', (e) -> throw new Error "Failed when starting http service: #{e.message}"
 
@@ -167,6 +170,34 @@ app.post '/deliver', (req, res) ->
 		res.sendStatus 201
 	else
 		res.sendStatus 400
+
+do ->
+	sourceFiles = [
+		'app.coffee'
+		'authReader.coffee'
+		'package.json'
+		'Dockerfile'
+		'LICENSE'
+	]
+	
+	app.get '/source', (req, res) ->
+		res.charset = 'utf-8';
+		res.type 'txt'
+		
+		res.send """# nodePush
+		
+		The following source files are available for download:\n
+		""" + sourceFiles.map((item) -> "* /source/#{item}").join "\n"
+		
+	app.get new RegExp('/source/('+sourceFiles.map(escapeRegExp).join('|')+')'), (req, res) ->
+		res.type('txt').sendFile "#{__dirname}/#{req.params[0]}", (err) ->
+			if err
+				if err.code is 'ECONNABORT' and res.statusCode is 304
+					debug 'Request aborted, cached'
+				else
+					res.sendStatus 404 unless res.headersSent
+					
+				do res.end
 
 # and finally start up everything
 server.listen config.outbound.port, config.outbound.host, null, ->

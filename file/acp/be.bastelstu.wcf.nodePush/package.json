@@ -16,7 +16,8 @@
 		"debug": "~0.8",
 		"cors": "*",
 		"body-parser": "~1",
-		"rc": "~1"
+		"rc": "~1",
+		"escape-string-regexp": "*"
 	},
 	"scripts": {
 		"start": "coffee app.coffee"
