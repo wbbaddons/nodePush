@@ -40,7 +40,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	/**
 	 * @see	\wcf\system\push\PushHandler::sendMessage()
 	 */
-	public function sendMessage($message, $userIDs = array()) {
+	public function sendMessage($message, array $userIDs = array(), array $payload = array()) {
 		if (!$this->isEnabled()) return false;
 		if (!\wcf\data\package\Package::isValidPackageName($message)) return false;
 		$userIDs = array_unique(\wcf\util\ArrayUtil::toIntegerArray($userIDs));
@@ -52,40 +52,17 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 			), \wcf\util\Signer::createSignedString(
 				\wcf\util\JSON::encode(array(
 					'message' => $message,
-					'userIDs' => $userIDs
+					'userIDs' => $userIDs,
+					'payload' => $payload
 				))
 			));
+			
 			$http->addHeader('content-type', 'application/octet-stream');
 			$http->execute();
 			return true;
 		}
 		catch (\Exception $e) {
 			return false;
-		}
-	}
-	
-	/**
-	 * @deprecated Use \wcf\system\push\PushHandler::sendDeferredMessage()
-	 */
-	public function sendDeferredMessage($message, $userIDs = array()) {
-		if (!$this->isEnabled()) return false;
-		if (!\wcf\data\package\Package::isValidPackageName($message)) return false;
-		$userIDs = array_unique(\wcf\util\ArrayUtil::toIntegerArray($userIDs));
-		
-		$this->deferred[] = array(
-			'message' => $message,
-			'userIDs' => $userIDs
-		);
-		
-		return true;
-	}
-	
-	/**
-	 * @deprecated See \wcf\system\nodePush\NodePushHandler::sendDeferredMessage()
-	 */
-	public function __destruct() {
-		foreach ($this->deferred as $data) {
-			$this->sendMessage($data['message'], $data['userIDs']);
 		}
 	}
 }

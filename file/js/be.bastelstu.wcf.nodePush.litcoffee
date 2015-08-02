@@ -6,7 +6,7 @@ everything that has to be done in order to connect to **nodePush** and provides 
 
 	### Copyright Information
 	# @author	Tim Düsterhus
-	# @copyright	2012-2014 Tim Düsterhus
+	# @copyright	2012-2015 Tim Düsterhus
 	# @license	BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>
 	# @package	be.bastelstu.wcf.nodePush
 	###
@@ -30,20 +30,16 @@ Continue with defining the needed variables. All variables are local to our clos
 exposed by a function if necessary.
 
 		socket = null
-		connected = false
-		initialized = false
-		events =
-			connect: $.Callbacks()
-			disconnect: $.Callbacks()
-			message: { }
+		connected = no
+		initialized = no
 
 Initialize socket.io to enable nodePush.
 
 		init = (host, signedUserID) ->
 			return if initialized
-			initialized = true
+			initialized = yes
+			
 			console.log 'Initializing nodePush'
-			be.bastelstu.wcf.push.init be.bastelstu.wcf.nodePush
 			
 			unless window.io?
 				console.error 'nodePush not available, aborting'
@@ -51,30 +47,29 @@ Initialize socket.io to enable nodePush.
 				
 			socket = window.io host
 			
+			be.bastelstu.wcf.push.init be.bastelstu.wcf.nodePush
+			
 			socket.on 'connect', ->
 				console.log 'Connected to nodePush'
 				socket.emit 'userID', signedUserID
 			
 			socket.on 'authenticated', ->
 				console.log 'Exchanged userID with nodePush'
-				connected = true
-				do events.connect.fire
+				connected = yes
 			
 			socket.on 'disconnect', ->
-				connected = false
 				console.warn 'Lost connection to nodePush'
-			
-			for key, value of events.message
-				socket.on key, -> do events.message[message].fire
+				connected = no
 				
 Add a new `callback` that will be called when a connection to nodePush is established and the
 userID was exchanged. The given `callback` will be called once if a connection is established at
 time of calling. Return `true` on success and `false` otherwise.
 
 		onConnect = (callback) ->
+			return false unless socket?
 			return false unless $.isFunction callback
 			
-			events.connect.add callback
+			socket.on 'authenticated', -> do callback
 			
 			if connected
 				setTimeout ->
@@ -86,23 +81,22 @@ Add a new `callback` that will be called when the connection to nodePush is lost
 on success and `false` otherwise.
 
 		onDisconnect = (callback) ->
+			return false unless socket?
 			return false unless $.isFunction callback
 			
-			events.disconnect.add callback
+			socket.on 'disconnect', -> do callback
+			
 			true
 
 Add a new `callback` that will be called when the specified `message` is received. Return `true`
 on success and `false` otherwise.
 
 		onMessage = (message, callback) ->
+			return false unless socket?
 			return false unless $.isFunction callback
 			return false unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test message
 			
-			unless events.message[message]?
-				events.message[message] = $.Callbacks()
-				if socket?
-					socket.on message, -> do events.message[message].fire
-			events.message[message].add callback
+			socket.on message, (payload) -> callback payload
 			
 			true
 

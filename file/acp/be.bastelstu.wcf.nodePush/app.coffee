@@ -95,7 +95,7 @@ checkSignature = (data, key) ->
 			return payload
 
 # sends the given message to the given userIDs
-sendMessage = (name, userIDs = [ ]) ->
+sendMessage = (name, userIDs = [ ], payload) ->
 	return false unless /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test name
 	
 	debug "#{name} -> #{userIDs.join ','}"
@@ -105,9 +105,9 @@ sendMessage = (name, userIDs = [ ]) ->
 		stats.messages[name]++
 	
 	if userIDs.length
-		(io.to "user-#{userID}").emit name for userID in userIDs
+		(io.to "user-#{userID}").emit name, payload for userID in userIDs
 	else
-		(io.to 'authenticated').emit name
+		(io.to 'authenticated').emit name, payload
 	true
 
 app = do express
@@ -165,8 +165,9 @@ app.post '/deliver', (req, res) ->
 		
 	message = payload.message
 	userIDs = payload.userIDs.map (item) -> parseInt item, 10
+	payload = payload.payload
 	
-	if sendMessage message, userIDs
+	if sendMessage message, userIDs, payload
 		res.sendStatus 201
 	else
 		res.sendStatus 400
