@@ -52,7 +52,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 			), \wcf\util\Signer::createSignedString(
 				\wcf\util\JSON::encode(array(
 					'message' => $message,
-					'userIDs' => $userIDs,
+					'userIDs' => array_values($userIDs),
 					'payload' => $payload
 				))
 			));
