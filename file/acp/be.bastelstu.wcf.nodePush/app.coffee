@@ -175,7 +175,6 @@ app.post '/deliver', (req, res) ->
 do ->
 	sourceFiles = [
 		'app.coffee'
-		'authReader.coffee'
 		'package.json'
 		'Dockerfile'
 		'LICENSE'
