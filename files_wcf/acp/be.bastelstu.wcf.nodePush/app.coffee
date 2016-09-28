@@ -1,4 +1,4 @@
-# Copyright (C) 2012 - 2015 Tim Düsterhus
+# Copyright (C) 2012 - 2016 Tim Düsterhus
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -42,8 +42,8 @@ process.title = "nodePush #{config.outbound.host}:#{config.outbound.port}"
 unless config.signerKey?
 	try
 		options_inc_php = fs.readFileSync "#{__dirname}/../../options.inc.php"
-		unless matches = /define\('SIGNER_SECRET', '(.*)'\);/.exec options_inc_php
-			throw new Error "options.inc.php does not contain the SIGNER_SECRET option."
+		unless matches = /define\('SIGNATURE_SECRET', '(.*)'\);/.exec options_inc_php
+			throw new Error "options.inc.php does not contain the SIGNATURE_SECRET option."
 	catch e
 		throw new Error "Cannot find signer secret: #{e}"
 	config.signerKey = matches[1].replace("\\'", "'").replace("\\\\", "\\")
@@ -72,23 +72,23 @@ checkSignature = (data, key) ->
 		return false
 		
 	payload = new Buffer payload, 'base64'
-	if signature.length isnt 40
+	if signature.length isnt 64
 		debug "Invalid signature #{data}"
 		return false
 	else
-		hmac = crypto.createHmac 'sha1', key
+		hmac = crypto.createHmac 'sha256', key
 		hmac.update payload
 		digest = hmac.digest 'hex'
 		
 		# https://www.isecpartners.com/blog/2011/february/double-hmac-verification.aspx
-		given = crypto.createHmac 'sha1', key
+		given = crypto.createHmac 'sha256', key
 		given.update signature
 		
-		calculated = crypto.createHmac 'sha1', key
+		calculated = crypto.createHmac 'sha256', key
 		calculated.update digest
 		
 		if given.digest('hex') isnt calculated.digest('hex')
-			debug "Invalid signature #{data}"
+			debug "Invalid signature #{data} - expected #{digest}"
 			
 			return false
 		else
@@ -225,10 +225,5 @@ server.listen config.outbound.port, config.outbound.host, null, ->
 			socket.join 'authenticated'
 			socket.join "user-#{payload}"
 			socket.emit 'authenticated'
-	
-	# initialize ticks
-	for intervalLength in [ 15, 30, 60, 90, 120 ]
-		do (intervalLength) ->
-			setInterval (-> sendMessage "be.bastelstu.wcf.nodePush.tick#{intervalLength}"), intervalLength * 1e3
 	
 	console.log "At your service"

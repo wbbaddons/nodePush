@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<language xmlns="http://www.woltlab.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.woltlab.com http://www.woltlab.com/XSD/maelstrom/language.xsd" languagecode="de-informal">
-	<category name="wcf.acp.option">
-		<item name="wcf.acp.option.category.general.system.nodePush"><![CDATA[Push-Server]]></item>
-		<item name="wcf.acp.option.nodepush_host"><![CDATA[Push-Server-Host (nodePush)]]></item>
-		<item name="wcf.acp.option.nodepush_host.description"><![CDATA[Der Push-Server dient dazu, verschiedene Meldungen in Echtzeit an den Browser zu übergeben. <br />
-<strong>Hinweis:</strong> Setze diese Einstellung nur, wenn du weißt, was sie bewirkt. Die Adresse wird mit dem entsprechenden Protokoll („http://“, „https://“) und ohne abschließenden Slash (/) angegeben.]]></item>
-	</category>
-</language>

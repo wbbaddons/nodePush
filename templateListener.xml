@@ -5,29 +5,19 @@
 			<environment>user</environment>
 			<templatename>headInclude</templatename>
 			<eventname>javascriptInclude</eventname>
-			<templatecode><![CDATA[{if 'MAIL_SMTP_STARTTLS'|defined}
-<script data-relocate="true">
-	require(['{NODEPUSH_HOST|encodeJS}/socket.io/socket.io.js'], function (io) {
-		window.io = io;
-		
-		require(['be.bastelstu.wcf.nodePush{if !ENABLE_DEBUG_MODE}.min{/if}'], function (nodePush) {
-			be.bastelstu.wcf.nodePush.init('{@NODEPUSH_HOST|encodeJS}', '{$nodePushSignedUserID|encodeJS}');
-		});
-	});
+			<templatecode><![CDATA[
+<script>
+	{if NODEPUSH_HOST}
+	requirejs.config({ map: { '*': { 'Bastelstu.be/Push': 'Bastelstu.be/NodePush' } }
+	                 , paths: { 'socket.io': '{@NODEPUSH_HOST|encodeJS}/socket.io/socket.io' }
+	                 })
+	require([ 'Bastelstu.be/NodePush' ], function (nodePush) {
+		nodePush.init('{@NODEPUSH_HOST|encodeJS}', '{$nodePushSignedUserID|encodeJS}')
+	})
+	{/if}
 </script>
-{else}
-{if NODEPUSH_HOST}<script data-relocate="true" src="{NODEPUSH_HOST}/socket.io/socket.io.js"></script>{/if}
-<script data-relocate="true" src="{$__wcf->getPath()}js/be.bastelstu.wcf.nodePush{if !ENABLE_DEBUG_MODE}.min{/if}.js"></script>
-{/if}]]></templatecode>
+]]></templatecode>
 			<nice>-99</nice>
-		</templatelistener>
-		
-		<templatelistener name="javascriptInit">
-			<environment>user</environment>
-			<templatename>headInclude</templatename>
-			<eventname>javascriptInit</eventname>
-			<templatecode><![CDATA[{if NODEPUSH_HOST && !'MAIL_SMTP_STARTTLS'|defined}be.bastelstu.wcf.nodePush.init('{@NODEPUSH_HOST|encodeJS}', '{$nodePushSignedUserID|encodeJS}');{/if}]]></templatecode>
-			<nice>-70</nice>
 		</templatelistener>
 	</import>
 </data>
