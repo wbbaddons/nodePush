@@ -1,26 +1,29 @@
 <?php
+/*
+ * Copyright (c) 2012 - 2016, Tim Düsterhus
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 namespace wcf\system\nodePush;
-use wcf\util\StringUtil;
+
+use \wcf\system\cache\CacheHandler;
 
 /**
- * DO NOT USE NodePushHandler DIRECTLY. USE:
- * \wcf\system\push\PushHandler
- * It uses the same API.
- *
- * @author	Tim Düsterhus
- * @copyright	2012-2015 Tim Düsterhus
- * @license	BSD 3-Clause License <http://opensource.org/licenses/BSD-3-Clause>
- * @package	be.bastelstu.wcf.nodePush
- * @subpackage	system.nodePush
+ * Transmits push messages to the nodePush service.
  */
 class NodePushHandler extends \wcf\system\SingletonFactory {
-	/**
-	 * Array of messages to send at shutdown.
-	 * 
-	 * @var	array<string>
-	 */
-	private $deferred = array();
-	
 	/**
 	 * @see	\wcf\system\push\PushHandler::isEnabled()
 	 */
@@ -33,6 +36,7 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 */
 	public function isRunning() {
 		if (!$this->isEnabled()) return false;
+		if (!(CacheHandler::getInstance()->getCacheSource() instanceof \wcf\system\cache\source\RedisCacheSource)) return false;
 		
 		return true;
 	}
@@ -40,26 +44,18 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	/**
 	 * @see	\wcf\system\push\PushHandler::sendMessage()
 	 */
-	public function sendMessage($message, array $userIDs = array(), array $payload = array()) {
-		if (!$this->isEnabled()) return false;
+	public function sendMessage($message, array $userIDs = [ ], array $payload = [ ]) {
+		if (!$this->isRunning()) return false;
 		if (!\wcf\data\package\Package::isValidPackageName($message)) return false;
 		$userIDs = array_unique(\wcf\util\ArrayUtil::toIntegerArray($userIDs));
 		
 		try {
-			$http = new \wcf\util\HTTPRequest(NODEPUSH_HOST.'/deliver', array(
-				'timeout' => 2,
-				'method' => 'POST'
-			), \wcf\util\Signer::createSignedString(
-				\wcf\util\JSON::encode(array(
-					'message' => $message,
-					'userIDs' => array_values($userIDs),
-					'payload' => $payload
-				))
-			));
-			
-			$http->addHeader('content-type', 'application/octet-stream');
-			$http->execute();
-			return true;
+			$redis = CacheHandler::getInstance()->getCacheSource()->getRedis();
+			return $redis->publish('nodePush', \wcf\util\JSON::encode([
+				'message' => $message,
+				'userIDs' => array_values($userIDs),
+				'payload' => $payload
+			]));
 		}
 		catch (\Exception $e) {
 			return false;
