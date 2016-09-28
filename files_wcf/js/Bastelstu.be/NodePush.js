@@ -32,15 +32,17 @@ define([ 'Bastelstu.be/core' ], function (core) {
 		})
 	}
 
+	const promise = core.Symbol('promise')
+
 	class NodePush {
 		constructor() {
-			this.promise = undefined
+			this[promise] = undefined
 		}
 
 		init(host, signedUserID) {
-			if (this.promise !== undefined) return
+			if (this[promise] !== undefined) return
 
-			this.promise =
+			this[promise] =
 			getIo()
 			.then((function (io) {
 				const socket = io(host)
@@ -64,7 +66,7 @@ define([ 'Bastelstu.be/core' ], function (core) {
 		}
 
 		onConnect(callback) {
-			return this.promise
+			return this[promise]
 			.then((function (socket) {
 				socket.on('authenticated', function () {
 					callback()
@@ -79,7 +81,7 @@ define([ 'Bastelstu.be/core' ], function (core) {
 		}
 
 		onDisconnect(callback) {
-			return this.promise
+			return this[promise]
 			.then(function (socket) {
 				socket.on('disconnect', function () {
 					callback()
@@ -92,7 +94,7 @@ define([ 'Bastelstu.be/core' ], function (core) {
 				return core.Promise.reject(new Error('Invalid message identifier'))
 			}
 
-			return this.promise
+			return this[promise]
 			.then(function (socket) {
 				socket.on(message, function (payload) {
 					callback(payload)
