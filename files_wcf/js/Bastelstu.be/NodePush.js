@@ -15,75 +15,88 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define([ ], function () {
+define([ 'Bastelstu.be/core' ], function (core) {
 	"use strict";
 	
-	let io = undefined;
+	let io = undefined
+	
+	function getIo() {
+		if (io !== undefined) return core.Promise.resolve(io)
+
+		return new core.Promise(function (resolve, reject) {
+			require([ 'socket.io' ], function (_io) {
+				io = _io
+
+				resolve(io)
+			}, reject)
+		})
+	}
 
 	class NodePush {
 		constructor() {
-			this.status = 'waiting'
+			this.promise = undefined
 		}
 
 		init(host, signedUserID) {
-			if (this.status !== 'waiting') return
-			this.status = 'initializing'
+			if (this.promise !== undefined) return
 
-			require([ 'socket.io' ], (function (_io) {
-				this.status = 'initialized'
+			this.promise =
+			getIo()
+			.then((function (io) {
+				const socket = io(host)
+				socket.on('connect', socket.emit.bind(socket, 'userID', signedUserID))
 
-				io = _io
-				this.socket = io(host)
-				this.socket.on('connect', this.socket.emit.bind(this.socket, 'userID', signedUserID))
-
-				this.socket.on('authenticated', (function () {
+				socket.on('authenticated', (function () {
 					this.connected = true
 				}).bind(this))
 
-				this.socket.on('disconnect', (function () {
+				socket.on('disconnect', (function () {
 					this.connected = false
 				}).bind(this))
-			}).bind(this), (function (err) {
-				this.status = 'error'
-				console.log(err)
+
+				return socket
+			}).bind(this))
+			.catch((function (err) {
+				console.log('Initializing nodePush failed:', err)
+
+				return core.Promise.reject(err)
 			}).bind(this))
 		}
 
-		getStatus() {
-			return this.status
-		}
-
 		onConnect(callback) {
-			if (this.status !== 'initialized') throw new Error('Not ready')
-
-			this.socket.on('authenticated', function () {
-				callback()
-			})
-
-			if (this.connected) {
-				setTimeout(function () {
+			return this.promise
+			.then((function (socket) {
+				socket.on('authenticated', function () {
 					callback()
-				}, 0)
-			}
+				})
+
+				if (this.connected) {
+					setTimeout(function () {
+						callback()
+					}, 0)
+				}
+			}).bind(this))
 		}
 
 		onDisconnect(callback) {
-			if (this.status !== 'initialized') throw new Error('Not ready')
-
-			this.socket.on('disconnect', function () {
-				callback()
+			return this.promise
+			.then(function (socket) {
+				socket.on('disconnect', function () {
+					callback()
+				})
 			})
 		}
 
 		onMessage(message, callback) {
-			if (this.status !== 'initialized') throw new Error('Not ready')
-
 			if (!/^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test(message)) {
-				throw new Error('Invalid message identifier')
+				return core.Promise.reject(new Error('Invalid message identifier'))
 			}
 
-			this.socket.on(message, function (payload) {
-				callback(payload)
+			return this.promise
+			.then(function (socket) {
+				socket.on(message, function (payload) {
+					callback(payload)
+				})
 			})
 		}
 	}
