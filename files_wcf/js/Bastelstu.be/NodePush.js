@@ -20,6 +20,9 @@ define([ 'Bastelstu.be/core' ], function (core) {
 	
 	let io = undefined
 	
+	/**
+	 * Returns a Promise the resolves to socket.io.
+	 */
 	function getIo() {
 		if (io !== undefined) return core.Promise.resolve(io)
 
@@ -39,6 +42,9 @@ define([ 'Bastelstu.be/core' ], function (core) {
 			this[promise] = undefined
 		}
 
+		/**
+		 * Connect to the given host and provide the given signed authentication string.
+		 */
 		init(host, signedUserID) {
 			if (this[promise] !== undefined) return
 
@@ -46,6 +52,7 @@ define([ 'Bastelstu.be/core' ], function (core) {
 			getIo()
 			.then((function (io) {
 				const socket = io(host)
+
 				socket.on('connect', socket.emit.bind(socket, 'userID', signedUserID))
 
 				socket.on('authenticated', (function () {
@@ -65,6 +72,9 @@ define([ 'Bastelstu.be/core' ], function (core) {
 			}).bind(this))
 		}
 
+		/**
+		 * Execute the given callback after connecting to the nodePush service.
+		 */
 		onConnect(callback) {
 			return this[promise]
 			.then((function (socket) {
@@ -80,6 +90,9 @@ define([ 'Bastelstu.be/core' ], function (core) {
 			}).bind(this))
 		}
 
+		/**
+		 * Execute the given callback after disconnecting from the nodePush service.
+		 */
 		onDisconnect(callback) {
 			return this[promise]
 			.then(function (socket) {
@@ -89,6 +102,9 @@ define([ 'Bastelstu.be/core' ], function (core) {
 			})
 		}
 
+		/**
+		 * Execute the given callback after receiving the given message from the nodePush service.
+		 */
 		onMessage(message, callback) {
 			if (!/^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test(message)) {
 				return core.Promise.reject(new Error('Invalid message identifier'))
