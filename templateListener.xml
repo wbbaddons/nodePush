@@ -13,7 +13,7 @@
 			<templatename>headIncludeJavaScript</templatename>
 			<eventname>requireConfig</eventname>
 			<templatecode><![CDATA[{if NODEPUSH_HOST}
-	;(requirejs.config({ map: { '*': { 'Bastelstu.be/Push': 'Bastelstu.be/NodePush' } } }));
+	;(requirejs.config({ map: { '*': { 'Bastelstu.be/_Push': 'Bastelstu.be/NodePush' } } }));
 {/if}]]></templatecode>
 		</templatelistener>
 
