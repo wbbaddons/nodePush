@@ -1,23 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <data xmlns="http://www.woltlab.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.woltlab.com http://www.woltlab.com/XSD/templateListener.xsd">
 	<import>
+		<templatelistener name="requirePaths">
+			<environment>user</environment>
+			<templatename>headIncludeJavaScript</templatename>
+			<eventname>requirePaths</eventname>
+			<templatecode><![CDATA[{if NODEPUSH_HOST}'socket.io': '{@NODEPUSH_HOST|encodeJS}/socket.io/socket.io',{/if}]]></templatecode>
+		</templatelistener>
+
+		<templatelistener name="requireConfig">
+			<environment>user</environment>
+			<templatename>headIncludeJavaScript</templatename>
+			<eventname>requireConfig</eventname>
+			<templatecode><![CDATA[{if NODEPUSH_HOST}
+	;(requirejs.config({ map: { '*': { 'Bastelstu.be/Push': 'Bastelstu.be/NodePush' } } }));
+{/if}]]></templatecode>
+		</templatelistener>
+
 		<templatelistener name="javascriptInclude">
 			<environment>user</environment>
-			<templatename>headInclude</templatename>
+			<templatename>headIncludeJavaScript</templatename>
+			<!-- Don't use javascriptInit, as it runs after the DOM is loaded -->
 			<eventname>javascriptInclude</eventname>
 			<templatecode><![CDATA[
 {if NODEPUSH_HOST}
 <script>
-	requirejs.config({ map: { '*': { 'Bastelstu.be/Push': 'Bastelstu.be/NodePush' } }
-	                 , paths: { 'socket.io': '{@NODEPUSH_HOST|encodeJS}/socket.io/socket.io' }
-	                 })
 	require([ 'Bastelstu.be/NodePush' ], function (nodePush) {
 		nodePush.init('{@NODEPUSH_HOST|encodeJS}', '{$nodePushSignedUserID|encodeJS}')
 	})
 </script>
 {/if}
 ]]></templatecode>
-			<nice>-99</nice>
 		</templatelistener>
 	</import>
 </data>
