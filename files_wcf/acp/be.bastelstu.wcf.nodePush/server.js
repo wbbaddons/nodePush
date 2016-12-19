@@ -122,7 +122,7 @@ app.get('/', function (req, res) {
 {
 	const sourceFiles = [ 'app.js'
 	                    , 'package.json'
-	                    , 'Dockerfile',
+	                    , 'Dockerfile'
 	                    , 'LICENSE'
 	                    ]
 
