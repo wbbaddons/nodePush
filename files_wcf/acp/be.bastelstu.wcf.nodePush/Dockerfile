@@ -15,7 +15,5 @@
 
 FROM node:onbuild
 
-MAINTAINER Tim Düsterhus
-
 EXPOSE 9001
 USER node
