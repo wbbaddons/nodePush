@@ -50,14 +50,13 @@ if (!config.uuid) {
 	throw new Error('Please specify the UUID of WSC')
 }
 
-const stats = { status: 0
-              , outbound: { total: 0
+const stats = { outbound: { total: 0
                           , current: 0
                           }
               , inbound: 0
-              , messages: { }
               , bootTime: new Date()
               }
+if (config.enableStats) stats.messages = { }
 
 function checkSignature(data, key) {
 	[ signature, payload ] = String(data).split(/-/)
@@ -115,12 +114,14 @@ app.use(require('cors')())
 
 const server = require('http').Server(app)
 
-app.get('/', function (req, res) {
-	// TODO
+app.get('/status', function (req, res) {
+	res.charset = 'utf-8'
+	res.type('json')
+	res.send(JSON.stringify(stats))
 })
 
 {
-	const sourceFiles = [ 'app.js'
+	const sourceFiles = [ 'server.js'
 	                    , 'package.json'
 	                    , 'Dockerfile'
 	                    , 'LICENSE'
@@ -183,6 +184,7 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 	const r = redis.createClient(config.redis)
 
 	r.on('message', function (channel, _message) {
+		stats.inbound++
 		if (channel === `${config.uuid}:nodePush`) {
 			try {
 				_message = JSON.parse(_message)
