@@ -5,8 +5,8 @@
 		<packagedescription><![CDATA[nodePush is a node.js based backend for Push.]]></packagedescription>
 		<packagedescription language="de"><![CDATA[nodePush ist ein node.js-basiertes Backend für Push.]]></packagedescription>
 		<isapplication>0</isapplication>
-		<version>3.0.0 Alpha 1</version>
-		<date>2016-09-28</date>
+		<version>3.0.0 RC 1</version>
+		<date>2016-12-19</date>
 		<license><![CDATA[Affero General Public License 3 <https://www.gnu.org/licenses/agpl-3.0.html>]]></license>
 	</packageinformation>
 	
@@ -21,6 +21,7 @@
 	</requiredpackages>
 	
 	<excludedpackages>
+		<excludedpackage version="3.1.0 Alpha 1">com.woltlab.wcf</excludedpackage>
 		<excludedpackage version="*">be.bastelstu.wcf.pusher</excludedpackage>
 	</excludedpackages>
 	
