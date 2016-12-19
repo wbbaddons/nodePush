@@ -112,7 +112,6 @@ function sendMessage(name, userIDs, payload) {
 
 const app = express()
 app.use(require('cors')())
-app.use(require('body-parser').raw)
 
 const server = require('http').Server(app)
 
