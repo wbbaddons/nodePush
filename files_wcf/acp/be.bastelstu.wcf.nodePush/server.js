@@ -107,13 +107,13 @@ function sendMessage(name, target, payload) {
 	if (target.guest) {
 		io.to('guest')
 	}
-	if (target.users) {
+	if (target.users instanceof Array) {
 		target.users.forEach(userID => io.to(`user-${userID}`))
 	}
-	if (target.groups) {
+	if (target.groups instanceof Array) {
 		target.groups.forEach(groupID => io.to(`group-${groupID}`))
 	}
-	if (target.channels) {
+	if (target.channels instanceof Array) {
 		target.channels.forEach(channel => io.to(`channel-${channel}`))
 	}
 
@@ -196,6 +196,14 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 				return
 			}
 			payload.userID = parseInt(payload.userID, 10)
+			if (!(payload.groups instanceof Array)) {
+				socket.disconnect()
+				return
+			}
+			if (!(payload.channels instanceof Array)) {
+				socket.disconnect()
+				return
+			}
 
 			socket.join('authenticated')
 			socket.join(`user-${payload.userID}`)
