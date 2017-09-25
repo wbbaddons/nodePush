@@ -52,9 +52,21 @@ define([ 'Bastelstu.be/core' ], function (core) {
 			getIo()
 			.then((function (io) {
 				const socket = io(host)
+				let token = undefined
 
-				socket.on('connect', socket.emit.bind(socket, 'connectData', connectData))
+				socket.on('connect', function () {
+					if (token === undefined) {
+						socket.emit('connectData', connectData)
+					}
+					else {
+						socket.emit('token', token)
+					}
+				})
 
+				socket.on('rekey', function (_token) {
+					token = _token
+				})
+				
 				socket.on('authenticated', (function () {
 					this.connected = true
 				}).bind(this))

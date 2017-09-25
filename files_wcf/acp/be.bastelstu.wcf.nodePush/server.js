@@ -14,6 +14,7 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+"use strict";
 
 if ((process.getuid && process.getuid() === 0) || (process.getgid() && process.getgid() === 0)) {
 	throw new Error('Cowardly refusing to keep the process alive as root')
@@ -40,6 +41,8 @@ const config = require('rc')('nodePush', { enableStats: false
                                          , redis: 'redis://localhost'
                                          })
 
+const REKEY_INTERVAL = 60
+
 process.title = `nodePush ${config.outbound.host}:${config.outbound.port}`
 
 if (!config.signerKey) {
@@ -59,7 +62,7 @@ const stats = { outbound: { total: 0
 if (config.enableStats) stats.messages = { }
 
 function checkSignature(data, key) {
-	[ signature, payload ] = String(data).split(/-/)
+	let [ signature, payload ] = String(data).split(/-/)
 
 	if (!payload) {
 		return false
@@ -166,6 +169,9 @@ ${sourceFiles.map((item) => `* /source/${item}`).join('\n')}`)
 }
 
 server.listen(config.outbound.port, config.outbound.host, null, function () {
+	const rsub = redis.createClient(config.redis)
+	const r = redis.createClient(config.redis)
+	
 	io = require('socket.io')(server)
 
 	io.on('connection', function (socket) {
@@ -173,11 +179,31 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 		stats.outbound.current++
 
 		debug(`Client ${id} connected`)
+		
+		let channels
+		let rekeyTimer = undefined
+		let rekey = function () {
+			debug(`Client ${id} (${JSON.stringify(channels)}) receiving new keys`)
+			crypto.randomBytes(32, function (err, buf) {
+				if (err) {
+					socket.disconnect()
+					return
+				}
+				r.set(`${config.uuid}:nodePush:token:${buf.toString('hex')}`, JSON.stringify(channels), 'EX', REKEY_INTERVAL * 3)
+				socket.emit('rekey', buf.toString('hex'))
+			})
+		}
+		let connected = function () {
+			rekey()
+			rekeyTimer = setInterval(rekey, REKEY_INTERVAL * 1e3)
+			socket.emit('authenticated')
+		}
 
 		socket.on('disconnect', function () {
 			debug(`Client ${id} disconnected`)
 
 			stats.outbound.current--
+			clearInterval(rekeyTimer)
 		})
 
 		socket.on('connectData', function (connectData) {
@@ -205,23 +231,49 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 				return
 			}
 
-			socket.join('authenticated')
-			socket.join(`user-${payload.userID}`)
+			channels = [ 'authenticated' ]
+			channels.push(`user-${payload.userID}`)
 			if (payload.userID === 0) {
-				socket.join('guest')
+				channels.push('guest')
 			}
 			else {
-				socket.join('registered')
+				channels.push('registered')
 			}
-			payload.groups.forEach(groupID => socket.join(`group-${groupID}`))
-			payload.channels.forEach(channel => socket.join(`channel-${channel}`))
-			socket.emit('authenticated')
+			payload.groups.forEach(groupID => channels.push(`group-${groupID}`))
+			payload.channels.forEach(channel => channels.push(`channel-${channel}`))
+			
+			channels.forEach(channel => socket.join(channel))
+			connected()
+		})
+		
+		socket.on('token', function (token) {
+			debug(`Client ${id} sent reconnect token ${token}`)
+			r.get(`${config.uuid}:nodePush:token:${token}`, function (err, reply) {
+				r.del(`${config.uuid}:nodePush:token:${token}`)
+				if (err) {
+					socket.disconnect()
+					return
+				}
+				if (reply === null) {
+					socket.disconnect()
+					return
+				}
+				
+				try {
+					channels = JSON.parse(reply)
+					channels.forEach(channel => socket.join(channel))
+					
+					connected()
+				}
+				catch (e) {
+					socket.disconnect()
+					return
+				}
+			})
 		})
 	})
 
-	const r = redis.createClient(config.redis)
-
-	r.on('message', function (channel, _message) {
+	rsub.on('message', function (channel, _message) {
 		stats.inbound++
 		if (channel === `${config.uuid}:nodePush`) {
 			debug(`Push: ${_message}`)
@@ -243,5 +295,5 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 		}
 	})
 
-	r.subscribe(`${config.uuid}:nodePush`)
+	rsub.subscribe(`${config.uuid}:nodePush`)
 })
