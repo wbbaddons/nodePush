@@ -45,7 +45,7 @@ define([ 'Bastelstu.be/core' ], function (core) {
 		/**
 		 * Connect to the given host and provide the given signed authentication string.
 		 */
-		init(host, signedUserID) {
+		init(host, connectData) {
 			if (this[promise] !== undefined) return
 
 			this[promise] =
@@ -53,7 +53,7 @@ define([ 'Bastelstu.be/core' ], function (core) {
 			.then((function (io) {
 				const socket = io(host)
 
-				socket.on('connect', socket.emit.bind(socket, 'userID', signedUserID))
+				socket.on('connect', socket.emit.bind(socket, 'connectData', connectData))
 
 				socket.on('authenticated', (function () {
 					this.connected = true
@@ -70,6 +70,10 @@ define([ 'Bastelstu.be/core' ], function (core) {
 
 				return core.Promise.reject(err)
 			}).bind(this))
+		}
+		
+		getFeatureFlags() {
+			return [ 'authentication', 'target:channels', 'target:groups', 'target:users', 'target:registered', 'target:guest' ]
 		}
 
 		/**

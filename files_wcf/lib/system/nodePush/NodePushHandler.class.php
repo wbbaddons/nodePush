@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2012 - 2016, Tim Düsterhus
+ * Copyright (c) 2012 - 2017, Tim Düsterhus
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as published by
@@ -25,6 +25,13 @@ use \wcf\system\cache\CacheHandler;
  */
 class NodePushHandler extends \wcf\system\SingletonFactory {
 	/**
+	 * @see	\wcf\system\push\PushHandler::getFeatureFlags()
+	 */
+	public function getFeatureFlags() {
+		return [ 'authentication', 'target:channels', 'target:groups', 'target:users', 'target:registered', 'target:guest' ];
+	}
+
+	/**
 	 * @see	\wcf\system\push\PushHandler::isEnabled()
 	 */
 	public function isEnabled() {
@@ -46,19 +53,36 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 */
 	public function sendMessage($message, array $userIDs = [ ], array $payload = [ ]) {
 		if (!$this->isRunning()) return false;
+		if (is_array($message)) {
+			if (!isset($message['message'])) return false;
+			if (!\wcf\data\package\Package::isValidPackageName($message['message'])) return false;
+			
+			try {
+				$redis = CacheHandler::getInstance()->getCacheSource()->getRedis();
+				return $redis->publish('nodePush', \wcf\util\JSON::encode([
+					'message' => $message['message'],
+					'target'  => isset($message['target']) ? $message['target'] : null,
+					'payload' => isset($message['payload']) ? $message['payload'] : [ ],
+					
+				]));
+			}
+			catch (\Exception $e) {
+				return false;
+			}
+			
+			return;
+		}
+		
 		if (!\wcf\data\package\Package::isValidPackageName($message)) return false;
 		$userIDs = array_unique(\wcf\util\ArrayUtil::toIntegerArray($userIDs));
-		
-		try {
-			$redis = CacheHandler::getInstance()->getCacheSource()->getRedis();
-			return $redis->publish('nodePush', \wcf\util\JSON::encode([
-				'message' => $message,
-				'userIDs' => array_values($userIDs),
-				'payload' => $payload
-			]));
+		$target = null;
+		if ($userIDs) {
+			$target = [ 'users' => array_values($userIDs) ];
 		}
-		catch (\Exception $e) {
-			return false;
-		}
+		return $this->sendMessage([
+			'message' => $message,
+			'payload' => $payload,
+			'target' => $target
+		]);
 	}
 }

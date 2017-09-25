@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2012 - 2016, Tim Düsterhus
+ * Copyright (c) 2012 - 2017, Tim Düsterhus
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as published by
@@ -30,8 +30,17 @@ class TemplateEngineBeforeDisplayNodePushListener implements \wcf\system\event\I
 	public function execute($eventObj, $className, $eventName) {
 		if (!\wcf\system\nodePush\NodePushHandler::getInstance()->isEnabled()) return;
 		
-		WCF::getTPL()->assign(array(
-			'nodePushSignedUserID' => \wcf\util\CryptoUtil::createSignedString(WCF::getUser()->userID)
-		));
+		$channels = \wcf\system\push\PushHandler::getInstance()->getChannels();
+		
+		$payload = [
+			'userID'    => WCF::getUser()->userID,
+			'timestamp' => TIME_NOW,
+			'channels'  => $channels,
+			'groups'    => WCF::getUser()->getGroupIDs()
+		];
+		
+		WCF::getTPL()->assign([
+			'nodePushSignedUserID' => \wcf\util\CryptoUtil::createSignedString(\wcf\util\JSON::encode($payload))
+		]);
 	}
 }

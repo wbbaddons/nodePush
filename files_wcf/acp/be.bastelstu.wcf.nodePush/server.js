@@ -88,23 +88,36 @@ function checkSignature(data, key) {
 	return payload
 }
 
-function sendMessage(name, userIDs, payload) {
+function sendMessage(name, target, payload) {
 	if (!/^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test(name)) return false
 
-	debug(`${name} -> ${userIDs.join(',')}`)
+	debug(`${name} -> ${JSON.stringify(target)}`)
 
 	if (config.enableStats) {
 		stats.messages[name] = (stats.messages[name] || 0) + 1
 	}
 
-	if (userIDs.length) {
-		userIDs.forEach(function (userID) {
-			io.to(`user-${userID}`).emit(name, payload)
-		})
-	}
-	else {
+	if (target == null) {
 		io.to('authenticated').emit(name, payload)
+		return
 	}
+	if (target.registered) {
+		io.to('registered')
+	}
+	if (target.guest) {
+		io.to('guest')
+	}
+	if (target.users) {
+		target.users.forEach(userID => io.to(`user-${userID}`))
+	}
+	if (target.groups) {
+		target.groups.forEach(groupID => io.to(`group-${groupID}`))
+	}
+	if (target.channels) {
+		target.channels.forEach(channel => io.to(`channel-${channel}`))
+	}
+
+	io.emit(name, payload)
 
 	return true
 }
@@ -167,16 +180,33 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 			stats.outbound.current--
 		})
 
-		socket.on('userID', function (userID) {
-			debug(`Client ${id} sent userID ${userID}`)
+		socket.on('connectData', function (connectData) {
+			debug(`Client ${id} sent connectData ${connectData}`)
 
-			if (!(payload = checkSignature(userID, config.signerKey))) {
+			let payload
+
+			if (!(payload = checkSignature(connectData, config.signerKey))) {
 				socket.disconnect()
 				return
 			}
+			debug(`Client ${id} connectData: ${payload.toString('utf8')}`)
+			payload = JSON.parse(payload.toString('utf8'))
+			if (!payload.timestamp || (payload.timestamp * 1000) < (Date.now() - 15e3)) {
+				socket.disconnect()
+				return
+			}
+			payload.userID = parseInt(payload.userID, 10)
 
 			socket.join('authenticated')
-			socket.join(`user-${payload}`)
+			socket.join(`user-${payload.userID}`)
+			if (payload.userID === 0) {
+				socket.join('guest')
+			}
+			else {
+				socket.join('registered')
+			}
+			payload.groups.forEach(groupID => socket.join(`group-${groupID}`))
+			payload.channels.forEach(channel => socket.join(`channel-${channel}`))
 			socket.emit('authenticated')
 		})
 	})
@@ -186,6 +216,7 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 	r.on('message', function (channel, _message) {
 		stats.inbound++
 		if (channel === `${config.uuid}:nodePush`) {
+			debug(`Push: ${_message}`)
 			try {
 				_message = JSON.parse(_message)
 			}
@@ -195,13 +226,12 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 			}
 
 			if (!_message.message) return
-			if (!_message.userIDs) return
 
 			const message = _message.message
-			const userIDs = _message.userIDs.map((item) => parseInt(item, 10))
+			const target  = _message.target
 			const payload = _message.payload
 
-			sendMessage(message, userIDs, payload)
+			sendMessage(message, target, payload)
 		}
 	})
 
