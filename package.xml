@@ -41,7 +41,7 @@
 		<instruction type="templateListener" />
 	</instructions>
 
-	<instructions type="update" fromversion="3.0.0 RC 1">
+	<instructions type="update" fromversion="3.1.0 RC 1">
 		<instruction type="file" application="wcf">files_wcf.tar</instruction>
 		<instruction type="language">language/*.xml</instruction>
 		<instruction type="option" />
