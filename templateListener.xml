@@ -24,7 +24,7 @@
 			<eventname>javascriptInclude</eventname>
 			<templatecode><![CDATA[
 {if NODEPUSH_HOST}
-<script>
+<script data-relocate="true">
 	require([ 'Bastelstu.be/NodePush' ], function (nodePush) {
 		nodePush.init('{@NODEPUSH_HOST|encodeJS}', '{$nodePushSignedUserID|encodeJS}')
 	})
