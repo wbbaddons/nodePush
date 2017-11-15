@@ -19,11 +19,7 @@ define([ 'Bastelstu.be/core' ], function (core) {
 	"use strict";
 	
 	const io = new core.Promise(function (resolve, reject) {
-		require([ 'socket.io' ], function (_io) {
-			io = _io
-
-			resolve(io)
-		}, reject)
+		require([ 'socket.io' ], resolve, reject)
 	})
 
 	const promise = core.Symbol('promise')
