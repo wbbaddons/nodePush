@@ -18,39 +18,36 @@
 define([ 'Bastelstu.be/core' ], function (core) {
 	"use strict";
 	
-	let io = undefined
-	
-	/**
-	 * Returns a Promise the resolves to socket.io.
-	 */
-	function getIo() {
-		if (io !== undefined) return core.Promise.resolve(io)
+	const io = new core.Promise(function (resolve, reject) {
+		require([ 'socket.io' ], function (_io) {
+			io = _io
 
-		return new core.Promise(function (resolve, reject) {
-			require([ 'socket.io' ], function (_io) {
-				io = _io
-
-				resolve(io)
-			}, reject)
-		})
-	}
+			resolve(io)
+		}, reject)
+	})
 
 	const promise = core.Symbol('promise')
-
+	const resolve = core.Symbol('resolve')
+	const reject = core.Symbol('reject')
+	const initialized = core.Symbol('initialized')
+	
 	class NodePush {
 		constructor() {
-			this[promise] = undefined
+			this[initialized] = false
+			this[promise] = new core.Promise((function (_resolve, _reject) {
+				this[resolve] = _resolve
+				this[reject] = _reject
+			}).bind(this))
 		}
 
 		/**
 		 * Connect to the given host and provide the given signed authentication string.
 		 */
 		init(host, connectData) {
-			if (this[promise] !== undefined) return
+			if (this[initialized]) return
+			this[initialized] = true
 
-			this[promise] =
-			getIo()
-			.then((function (io) {
+			io.then((function (io) {
 				const socket = io(host)
 				let token = undefined
 
@@ -75,12 +72,12 @@ define([ 'Bastelstu.be/core' ], function (core) {
 					this.connected = false
 				}).bind(this))
 
-				return socket
+				this[resolve](socket)
 			}).bind(this))
 			.catch((function (err) {
 				console.log('Initializing nodePush failed:', err)
 
-				return core.Promise.reject(err)
+				this[reject](err)
 			}).bind(this))
 		}
 		
