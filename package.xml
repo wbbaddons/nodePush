@@ -18,6 +18,7 @@
 	<requiredpackages>
 		<requiredpackage minversion="3.0.0 Alpha 1">com.woltlab.wcf</requiredpackage>
 		<requiredpackage minversion="2.4.1">be.bastelstu.core-js</requiredpackage>
+		<requiredpackage minversion="2.1.0 RC 1">be.bastelstu.wcf.push</requiredpackage>
 	</requiredpackages>
 	
 	<compatibility>
