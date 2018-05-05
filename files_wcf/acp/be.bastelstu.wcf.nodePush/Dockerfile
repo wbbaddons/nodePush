@@ -13,7 +13,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-FROM node:onbuild
+FROM node:8
 
-EXPOSE 9001
-USER node
+RUN	mkdir -p /usr/src/app/
+
+WORKDIR	/usr/src/app
+
+COPY	package.json /usr/src/app/
+RUN	yarn install
+COPY	. /usr/src/app/
+
+USER	node
+EXPOSE	9001
+
+CMD	[ "node", "server.js" ]
