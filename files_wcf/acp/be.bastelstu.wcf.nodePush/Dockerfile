@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-FROM node:8
+FROM node:10
 
 RUN	mkdir -p /usr/src/app/
 
