@@ -16,7 +16,7 @@
  */
 "use strict";
 
-if ((process.getuid && process.getuid() === 0) || (process.getgid() && process.getgid() === 0)) {
+if ((process.getuid && process.getuid() === 0) || (process.getgid && process.getgid() === 0)) {
 	throw new Error('Cowardly refusing to keep the process alive as root')
 }
 
