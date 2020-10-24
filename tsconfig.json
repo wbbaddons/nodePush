@@ -18,6 +18,12 @@
     "strict": true,
     "sourceMap": true,
     "declarationDir": "out.d",
-    "declaration": true
+    "declaration": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "node_modules/@wbbaddons/push/ts/*"
+      ]
+    }
   }
 }
