@@ -26,8 +26,6 @@ const crypto       = require('crypto')
 const debug        = require('debug')('nodePush')
 const escapeRegExp = require('escape-string-regexp')
 const express      = require('express')
-const fs           = require('fs')
-const net          = require('net')
 const redis        = require('redis')
 
 let io = null
