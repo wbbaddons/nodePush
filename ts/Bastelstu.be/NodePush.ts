@@ -16,8 +16,11 @@
  */
 
 import { Socket } from "socket.io-client";
+import _Push from 'Bastelstu.be/_Push';
 
-class NodePush {
+type Push = typeof _Push;
+
+class NodePush implements Push {
   private initialized = false;
   private connected = false;
   private waitForInit: Promise<typeof Socket>;
