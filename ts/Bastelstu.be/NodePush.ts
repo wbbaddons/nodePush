@@ -103,7 +103,7 @@ class NodePush {
   async onDisconnect(callback: () => unknown): Promise<void> {
     const socket = await this.waitForInit;
 
-    socket.on("disconnect", function () {
+    socket.on("disconnect", () => {
       callback();
     });
   }
