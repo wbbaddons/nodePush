@@ -1,0 +1,17 @@
+on:
+  push:
+  pull_request:
+
+name: Check TypeScript
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "12"
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - run: yarn install
+      - run: yarn run tsc --noEmit
