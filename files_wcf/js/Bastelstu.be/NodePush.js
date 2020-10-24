@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 - 2016, Tim Düsterhus
+ * Copyright (c) 2012 - 2020, Tim Düsterhus
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as published by
@@ -18,7 +18,7 @@
 define([ 'Bastelstu.be/core' ], function (core) {
 	"use strict";
 	
-	const io = new core.Promise(function (resolve, reject) {
+	const io = new Promise(function (resolve, reject) {
 		require([ 'socket.io' ], resolve, reject)
 	})
 
@@ -30,7 +30,7 @@ define([ 'Bastelstu.be/core' ], function (core) {
 	class NodePush {
 		constructor() {
 			this[initialized] = false
-			this[promise] = new core.Promise((function (_resolve, _reject) {
+			this[promise] = new Promise((function (_resolve, _reject) {
 				this[resolve] = _resolve
 				this[reject] = _reject
 			}).bind(this))
@@ -116,7 +116,7 @@ define([ 'Bastelstu.be/core' ], function (core) {
 		 */
 		onMessage(message, callback) {
 			if (!/^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test(message)) {
-				return core.Promise.reject(new Error('Invalid message identifier'))
+				return Promise.reject(new Error('Invalid message identifier'))
 			}
 
 			return this[promise]
