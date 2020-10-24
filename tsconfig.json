@@ -1,0 +1,23 @@
+{
+  "include": [
+    "ts/**/*"
+  ],
+  "compilerOptions": {
+    "allowJs": true,
+    "target": "es2015",
+    "module": "amd",
+    "rootDir": "ts/",
+    "outDir": "files_wcf/js/",
+    "lib": [
+      "es2015",
+      "dom"
+    ],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "noImplicitThis": true,
+    "strict": true,
+    "sourceMap": true,
+    "declarationDir": "out.d",
+    "declaration": true
+  }
+}

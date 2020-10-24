@@ -1,2 +1,5 @@
 be.bastelstu.wcf.nodePush.tar
 files_wcf.tar
+
+node_modules
+out.d

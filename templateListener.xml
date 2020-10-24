@@ -5,7 +5,7 @@
 			<environment>user</environment>
 			<templatename>headIncludeJavaScript</templatename>
 			<eventname>requirePaths</eventname>
-			<templatecode><![CDATA[{if NODEPUSH_HOST}'socket.io': '{@NODEPUSH_HOST|encodeJS}/socket.io/socket.io',{/if}]]></templatecode>
+			<templatecode><![CDATA[{if NODEPUSH_HOST}'socket.io-client': '{@NODEPUSH_HOST|encodeJS}/socket.io/socket.io',{/if}]]></templatecode>
 		</templatelistener>
 
 		<templatelistener name="requireConfig">
