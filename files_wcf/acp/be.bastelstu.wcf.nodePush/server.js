@@ -66,23 +66,17 @@ function checkSignature(data, key) {
 		return false
 	}
 
-	payload = new Buffer(payload, 'base64')
-	if (signature.length !== 64) {
+	signature = Buffer.from(signature, 'hex')
+	payload = Buffer.from(payload, 'base64')
+	if (signature.length !== 32) {
 		return false
 	}
 
 	const hmac = crypto.createHmac('sha256', key)
 	hmac.update(payload)
-	const digest = hmac.digest('hex')
+	const digest = hmac.digest()
 
-	// https://www.isecpartners.com/blog/2011/february/double-hmac-verification.aspx
-	const given = crypto.createHmac('sha256', key)
-	given.update(signature)
-
-	const calculated = crypto.createHmac('sha256', key)
-	calculated.update(digest)
-
-	if (given.digest('hex') !== calculated.digest('hex')) {
+	if (!crypto.timingSafeEqual(signature, digest)) {
 		return false
 	}
 
