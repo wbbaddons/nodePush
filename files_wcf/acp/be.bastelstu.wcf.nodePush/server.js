@@ -210,21 +210,25 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 			let payload
 
 			if (!(payload = checkSignature(connectData, config.signerKey))) {
+				debug(`Client ${id} sent incorrectly signed connectData, disonnecting`)
 				socket.disconnect()
 				return
 			}
 			debug(`Client ${id} connectData: ${payload.toString('utf8')}`)
 			payload = JSON.parse(payload.toString('utf8'))
 			if (!payload.timestamp || (payload.timestamp * 1000) < (Date.now() - 15e3)) {
+				debug(`Client ${id} sent outdated connectData, disonnecting`)
 				socket.disconnect()
 				return
 			}
 			payload.userID = parseInt(payload.userID, 10)
 			if (!(payload.groups instanceof Array)) {
+				debug(`Client ${id} sent malformed groups in connectData, disonnecting`)
 				socket.disconnect()
 				return
 			}
 			if (!(payload.channels instanceof Array)) {
+				debug(`Client ${id} sent malformed channels in connectData, disonnecting`)
 				socket.disconnect()
 				return
 			}
@@ -249,10 +253,12 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 			r.get(`${config.uuid}:nodePush:token:${token}`, function (err, reply) {
 				r.del(`${config.uuid}:nodePush:token:${token}`)
 				if (err) {
+					debug(`Client ${id} failed to look up reconnect token, disconnecting`)
 					socket.disconnect()
 					return
 				}
 				if (reply === null) {
+					debug(`Client ${id} reconnect token does not exist, disconnecting`)
 					socket.disconnect()
 					return
 				}
