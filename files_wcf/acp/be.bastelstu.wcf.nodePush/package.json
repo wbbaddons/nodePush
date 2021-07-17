@@ -10,7 +10,7 @@
 	"author": "Tim Düsterhus <tim@bastelstu.be>",
 	"license": "AGPL-3.0",
 	"dependencies": {
-		"cors": "^2.8.1",
+		"cors": "^2.8.5",
 		"debug": "^2.2.0",
 		"escape-string-regexp": "^1.0.5",
 		"express": "^4.14.0",
