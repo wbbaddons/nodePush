@@ -14,7 +14,7 @@
 		"debug": "^4.3.2",
 		"escape-string-regexp": "^1.0.5",
 		"express": "^4.14.0",
-		"rc": "^1.1.6",
+		"rc": "^1.2.8",
 		"redis": "^2.6.2",
 		"socket.io": "^1.4.5"
 	},
