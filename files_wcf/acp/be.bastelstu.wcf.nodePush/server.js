@@ -14,30 +14,34 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-"use strict";
+
+import cors from 'cors'
+import crypto from 'crypto'
+import d from 'debug'
+import escapeRegExp from 'escape-string-regexp'
+import express from 'express'
+import rc from 'rc'
+import redis from 'redis'
+import {Server} from 'http'
+import {fileURLToPath} from 'node:url';
+import socket_io from 'socket.io';
+
+const debug = d('nodePush')
 
 if ((process.getuid && process.getuid() === 0) || (process.getgid && process.getgid() === 0)) {
 	throw new Error('Cowardly refusing to keep the process alive as root')
 }
 
-process.chdir(__dirname)
-
-const crypto       = require('crypto')
-const debug        = require('debug')('nodePush')
-const escapeRegExp = require('escape-string-regexp')
-const express      = require('express')
-const redis        = require('redis')
-
 let io = null
 
-const config = require('rc')('nodePush', { enableStats: false
-                                         , outbound: { port: 9001
-                                                     , host: '0.0.0.0'
-                                                     }
-                                         , signerKey: null
-                                         , uuid: null
-                                         , redis: 'redis://localhost'
-                                         })
+const config = rc('nodePush', { enableStats: false
+                              , outbound: { port: 9001
+                                          , host: '0.0.0.0'
+                                          }
+                              , signerKey: null
+                              , uuid: null
+                              , redis: 'redis://localhost'
+                              })
 
 const REKEY_INTERVAL = 60
 
@@ -118,9 +122,9 @@ function sendMessage(name, target, payload) {
 }
 
 const app = express()
-app.use(require('cors')())
+app.use(cors())
 
-const server = require('http').Server(app)
+const server = Server(app)
 
 app.get('/status', function (req, res) {
 	res.charset = 'utf-8'
@@ -146,7 +150,7 @@ ${sourceFiles.map((item) => `* /source/${item}`).join('\n')}`)
 	})
 
 	app.get(new RegExp('/source/('+sourceFiles.map(escapeRegExp).join('|')+')'), function (req, res) {
-		res.type('txt').sendFile(`${__dirname}/${req.params[0]}`, function (err) {
+		res.type('txt').sendFile(fileURLToPath(new URL(req.params[0], import.meta.url)), function (err) {
 			if (err) {
 				if (err.code !== 'ECONNABORT' || res.statusCode !== 304) {
 					if (!res.headersSent) {
@@ -164,7 +168,7 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 	const rsub = redis.createClient(config.redis)
 	const r = redis.createClient(config.redis)
 	
-	io = require('socket.io')(server)
+	io = socket_io(server)
 
 	io.on('connection', function (socket) {
 		const id = ++stats.outbound.total
