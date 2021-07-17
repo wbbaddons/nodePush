@@ -22,9 +22,9 @@ import escapeRegExp from 'escape-string-regexp'
 import express from 'express'
 import rc from 'rc'
 import redis from 'redis'
-import {Server} from 'http'
+import * as http from 'http'
 import {fileURLToPath} from 'node:url';
-import socket_io from 'socket.io';
+import * as socket_io from 'socket.io';
 
 const debug = d('nodePush')
 
@@ -124,7 +124,7 @@ function sendMessage(name, target, payload) {
 const app = express()
 app.use(cors())
 
-const server = Server(app)
+const server = http.createServer(app)
 
 app.get('/status', function (req, res) {
 	res.charset = 'utf-8'
@@ -168,7 +168,7 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 	const rsub = redis.createClient(config.redis)
 	const r = redis.createClient(config.redis)
 	
-	io = socket_io(server)
+	io = new socket_io.Server(server)
 
 	io.on('connection', function (socket) {
 		const id = ++stats.outbound.total
