@@ -16,7 +16,7 @@
 	</authorinformation>
 
 	<requiredpackages>
-		<requiredpackage minversion="3.0.0 Alpha 1">com.woltlab.wcf</requiredpackage>
+		<requiredpackage minversion="5.3.12">com.woltlab.wcf</requiredpackage>
 		<requiredpackage minversion="2.1.2">be.bastelstu.wcf.push</requiredpackage>
 	</requiredpackages>
 
