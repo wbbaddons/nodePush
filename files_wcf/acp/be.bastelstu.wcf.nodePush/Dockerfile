@@ -13,14 +13,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-FROM node:14
+FROM	node:14
 
 RUN	mkdir -p /usr/src/app/
 
 WORKDIR	/usr/src/app
 
-COPY	package.json /usr/src/app/
-RUN	yarn install
+COPY	package.json package-lock.json /usr/src/app/
+RUN	npm install
 COPY	. /usr/src/app/
 
 USER	node
