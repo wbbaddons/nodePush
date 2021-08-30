@@ -1,0 +1,19 @@
+name: TypeScript
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tsc:
+    name: "TSC"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+          cache: "npm"
+      - run: npm install
+      - run: npx tsc --noEmit
