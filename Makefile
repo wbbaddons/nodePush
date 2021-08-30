@@ -13,7 +13,7 @@ files_wcf.tar: $(WCF_FILES) $(TS_FILES)
 	tar cvf $@ --numeric-owner --exclude-vcs -C $* -- $(^:$*/%=%)
 
 files_wcf/js/%.js files_wcf/js/%.js.map: ts/%.ts tsconfig.json
-	yarn run tsc
+	npx tsc
 
 clean:
 	-find files_wcf/js/ -iname '*.js' -delete
