@@ -96,7 +96,7 @@ function sendMessage(name, target, payload) {
 		stats.messages[name] = (stats.messages[name] || 0) + 1
 	}
 
-	const targets = []
+	let targets = []
 
 	if (target == null) {
 		io.to('authenticated').emit(name, payload)
