@@ -16,7 +16,7 @@
  */
 
 import { Socket } from "socket.io-client";
-import _Push from 'Bastelstu.be/_Push';
+import _Push from "Bastelstu.be/_Push";
 
 type Push = typeof _Push;
 
@@ -38,7 +38,10 @@ class NodePush implements Push {
    * Connect to the given host and provide the given signed authentication string.
    */
   async init(host: string, connectData: string): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {
+      return;
+    }
+
     this.initialized = true;
 
     try {
@@ -114,7 +117,10 @@ class NodePush implements Push {
   /**
    * Execute the given callback after receiving the given message from the nodePush service.
    */
-  async onMessage(message: string, callback: (payload: unknown) => unknown): Promise<void> {
+  async onMessage(
+    message: string,
+    callback: (payload: unknown) => unknown
+  ): Promise<void> {
     if (!/^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test(message)) {
       throw new Error("Invalid message identifier");
     }
