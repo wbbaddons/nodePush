@@ -96,27 +96,29 @@ function sendMessage(name, target, payload) {
 		stats.messages[name] = (stats.messages[name] || 0) + 1
 	}
 
+	const targets = []
+
 	if (target == null) {
 		io.to('authenticated').emit(name, payload)
 		return
 	}
 	if (target.registered) {
-		io.to('registered')
+		targets.push('registered')
 	}
 	if (target.guest) {
-		io.to('guest')
+		targets.push('guest')
 	}
 	if (target.users instanceof Array) {
-		target.users.forEach(userID => io.to(`user-${userID}`))
+		targets = targets.concat(target.users.map(userID => `user-${userID}`))
 	}
 	if (target.groups instanceof Array) {
-		target.groups.forEach(groupID => io.to(`group-${groupID}`))
+		targets = targets.concat(target.groups.map(groupID => `group-${groupID}`))
 	}
 	if (target.channels instanceof Array) {
-		target.channels.forEach(channel => io.to(`channel-${channel}`))
+		targets = targets.concat(target.channels.map(channel => `channel-${channel}`))
 	}
 
-	io.emit(name, payload)
+	io.to(targets).emit(name, payload)
 
 	return true
 }
