@@ -23,8 +23,8 @@ type Push = typeof _Push;
 class NodePush implements Push {
   private initialized = false;
   private connected = false;
-  private waitForInit: Promise<typeof Socket>;
-  private initResolve!: (value: typeof Socket) => void;
+  private waitForInit: Promise<Socket>;
+  private initResolve!: (value: Socket) => void;
   private initReject!: (reason?: any) => void;
 
   constructor() {

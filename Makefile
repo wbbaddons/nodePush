@@ -1,4 +1,4 @@
-WCF_FILES = $(shell find files_wcf -type f)
+WCF_FILES = $(shell find files_wcf -type f -not -path 'files_wcf/acp/be.bastelstu.wcf.nodePush/node_modules/*')
 TS_FILES = $(shell find ts/ -type f |sed 's/ts$$/js/g;s!^ts/!files_wcf/js/!')
 
 all: be.bastelstu.wcf.nodePush.tar
