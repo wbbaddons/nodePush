@@ -168,7 +168,9 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 	const rsub = redis.createClient(config.redis)
 	const r = redis.createClient(config.redis)
 	
-	io = new socket_io.Server(server)
+	io = new socket_io.Server(server, {
+		cors: { }
+	})
 
 	io.on('connection', function (socket) {
 		const id = ++stats.outbound.total
