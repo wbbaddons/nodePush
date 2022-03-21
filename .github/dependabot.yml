@@ -3,11 +3,11 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
   - package-ecosystem: "npm"
     directory: "files_wcf/acp/be.bastelstu.wcf.nodePush/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
