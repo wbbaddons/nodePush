@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "prettier": "^2.8.7",
+    "prettier": "^2.8.8",
     "socket.io-client": "^4.6.1",
     "typescript": "^5.0.3"
   },
