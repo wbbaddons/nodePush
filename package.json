@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "prettier": "^2.8.8",
-    "socket.io-client": "^4.6.1",
+    "socket.io-client": "^4.6.2",
     "typescript": "^5.0.4"
   },
   "dependencies": {
