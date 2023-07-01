@@ -2,7 +2,7 @@
   "devDependencies": {
     "prettier": "^2.8.8",
     "socket.io-client": "^4.6.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.1.6"
   },
   "dependencies": {
     "@wbbaddons/push": "https://github.com/wbbaddons/Push.git#8e9d7135007ec2758378c74a7fd90e10d70debff"
