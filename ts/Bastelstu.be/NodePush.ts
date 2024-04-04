@@ -119,7 +119,7 @@ class NodePush implements Push {
    */
   async onMessage(
     message: string,
-    callback: (payload: unknown) => unknown
+    callback: (payload: unknown) => unknown,
   ): Promise<void> {
     if (!/^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+(\.[a-zA-Z0-9-_]+)+$/.test(message)) {
       throw new Error("Invalid message identifier");
