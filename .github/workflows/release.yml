@@ -5,6 +5,12 @@ on:
 
 name: Upload Release Asset
 
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
+
 jobs:
   build:
     name: Upload Release Asset
