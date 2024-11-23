@@ -5,8 +5,8 @@
 		<packagedescription><![CDATA[nodePush is a node.js based backend for Push.]]></packagedescription>
 		<packagedescription language="de"><![CDATA[nodePush ist ein node.js-basiertes Backend für Push.]]></packagedescription>
 		<isapplication>0</isapplication>
-		<version>3.3.1</version>
-		<date>2024-04-04</date>
+		<version>3.3.2</version>
+		<date>2024-11-23</date>
 		<license><![CDATA[Affero General Public License 3 <https://www.gnu.org/licenses/agpl-3.0.html>]]></license>
 	</packageinformation>
 
@@ -26,6 +26,14 @@
 	</excludedpackages>
 
 	<instructions type="install">
+		<instruction type="file" application="wcf">files_wcf.tar</instruction>
+		<instruction type="language">language/*.xml</instruction>
+		<instruction type="option" />
+		<instruction type="eventListener" />
+		<instruction type="templateListener" />
+	</instructions>
+
+	<instructions type="update" fromversion="3.3.1">
 		<instruction type="file" application="wcf">files_wcf.tar</instruction>
 		<instruction type="language">language/*.xml</instruction>
 		<instruction type="option" />
