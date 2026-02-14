@@ -13,7 +13,7 @@
 		"cors": "^2.8.5",
 		"debug": "^4.4.1",
 		"escape-string-regexp": "^5.0.0",
-		"express": "^4.21.2",
+		"express": "^4.22.1",
 		"rc": "^1.2.8",
 		"redis": "^3.1.2",
 		"socket.io": "^4.6.1"
