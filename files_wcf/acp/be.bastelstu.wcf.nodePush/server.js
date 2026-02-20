@@ -166,122 +166,137 @@ ${sourceFiles.map((item) => `* /source/${item}`).join('\n')}`)
 	})
 }
 
-server.listen(config.outbound.port, config.outbound.host, null, function () {
-	const rsub = redis.createClient(config.redis)
-	const r = redis.createClient(config.redis)
-	
-	io = new socket_io.Server(server, {
-		cors: { }
-	})
+const rsub = redis.createClient({
+	url: config.redis,
+})
+const r = redis.createClient({
+	url: config.redis,
+})
 
-	io.on('connection', function (socket) {
-		const id = ++stats.outbound.total
-		stats.outbound.current++
-
-		debug(`Client ${id} connected`)
-		
-		let channels
-		let rekeyTimer = undefined
-		let rekey = function () {
-			debug(`Client ${id} (${JSON.stringify(channels)}) receiving new keys`)
-			crypto.randomBytes(32, function (err, buf) {
-				if (err) {
-					socket.disconnect()
-					return
-				}
-				r.set(`${config.uuid}:nodePush:token:${buf.toString('hex')}`, JSON.stringify(channels), 'EX', REKEY_INTERVAL * 3)
-				socket.emit('rekey', buf.toString('hex'))
-			})
-		}
-		let connected = function () {
-			rekey()
-			rekeyTimer = setInterval(rekey, REKEY_INTERVAL * 1e3)
-			socket.emit('authenticated')
-		}
-
-		socket.on('disconnect', function () {
-			debug(`Client ${id} disconnected`)
-
-			stats.outbound.current--
-			clearInterval(rekeyTimer)
+Promise.all([
+	r.connect(),
+	rsub.connect(),
+]).then(function () {
+	server.listen(config.outbound.port, config.outbound.host, null, function () {
+		io = new socket_io.Server(server, {
+			cors: { }
 		})
 
-		socket.on('connectData', function (connectData) {
-			debug(`Client ${id} sent connectData ${connectData}`)
+		io.on('connection', function (socket) {
+			const id = ++stats.outbound.total
+			stats.outbound.current++
 
-			let payload
-
-			if (!(payload = checkSignature(connectData, config.signerKey))) {
-				debug(`Client ${id} sent incorrectly signed connectData, disonnecting`)
-				socket.disconnect()
-				return
-			}
-			debug(`Client ${id} connectData: ${payload.toString('utf8')}`)
-			payload = JSON.parse(payload.toString('utf8'))
-			if (!payload.timestamp || (payload.timestamp * 1000) < (Date.now() - 15e3)) {
-				debug(`Client ${id} sent outdated connectData, disonnecting`)
-				socket.disconnect()
-				return
-			}
-			payload.userID = parseInt(payload.userID, 10)
-			if (!(payload.groups instanceof Array)) {
-				debug(`Client ${id} sent malformed groups in connectData, disonnecting`)
-				socket.disconnect()
-				return
-			}
-			if (!(payload.channels instanceof Array)) {
-				debug(`Client ${id} sent malformed channels in connectData, disonnecting`)
-				socket.disconnect()
-				return
-			}
-
-			channels = [ 'authenticated' ]
-			channels.push(`user-${payload.userID}`)
-			if (payload.userID === 0) {
-				channels.push('guest')
-			}
-			else {
-				channels.push('registered')
-			}
-			payload.groups.forEach(groupID => channels.push(`group-${groupID}`))
-			payload.channels.forEach(channel => channels.push(`channel-${channel}`))
+			debug(`Client ${id} connected`)
 			
-			channels.forEach(channel => socket.join(channel))
-			connected()
-		})
-		
-		socket.on('token', function (token) {
-			debug(`Client ${id} sent reconnect token ${token}`)
-			r.get(`${config.uuid}:nodePush:token:${token}`, function (err, reply) {
-				r.del(`${config.uuid}:nodePush:token:${token}`)
-				if (err) {
-					debug(`Client ${id} failed to look up reconnect token, disconnecting`)
+			let channels
+			let rekeyTimer = undefined
+			let rekey = function () {
+				debug(`Client ${id} (${JSON.stringify(channels)}) receiving new keys`)
+				crypto.randomBytes(32, function (err, buf) {
+					if (err) {
+						socket.disconnect()
+						return
+					}
+					r.set(`${config.uuid}:nodePush:token:${buf.toString('hex')}`, JSON.stringify(channels), { EX: REKEY_INTERVAL * 3 })
+						.then(function () {
+							socket.emit('rekey', buf.toString('hex'))
+						})
+						.catch(function (err) {
+							socket.disconnect()
+						})
+				})
+			}
+			let connected = function () {
+				rekey()
+				rekeyTimer = setInterval(rekey, REKEY_INTERVAL * 1e3)
+				socket.emit('authenticated')
+			}
+
+			socket.on('disconnect', function () {
+				debug(`Client ${id} disconnected`)
+
+				stats.outbound.current--
+				clearInterval(rekeyTimer)
+			})
+
+			socket.on('connectData', function (connectData) {
+				debug(`Client ${id} sent connectData ${connectData}`)
+
+				let payload
+
+				if (!(payload = checkSignature(connectData, config.signerKey))) {
+					debug(`Client ${id} sent incorrectly signed connectData, disonnecting`)
 					socket.disconnect()
 					return
 				}
-				if (reply === null) {
-					debug(`Client ${id} reconnect token does not exist, disconnecting`)
+				debug(`Client ${id} connectData: ${payload.toString('utf8')}`)
+				payload = JSON.parse(payload.toString('utf8'))
+				if (!payload.timestamp || (payload.timestamp * 1000) < (Date.now() - 15e3)) {
+					debug(`Client ${id} sent outdated connectData, disonnecting`)
 					socket.disconnect()
 					return
 				}
+				payload.userID = parseInt(payload.userID, 10)
+				if (!(payload.groups instanceof Array)) {
+					debug(`Client ${id} sent malformed groups in connectData, disonnecting`)
+					socket.disconnect()
+					return
+				}
+				if (!(payload.channels instanceof Array)) {
+					debug(`Client ${id} sent malformed channels in connectData, disonnecting`)
+					socket.disconnect()
+					return
+				}
+
+				channels = [ 'authenticated' ]
+				channels.push(`user-${payload.userID}`)
+				if (payload.userID === 0) {
+					channels.push('guest')
+				}
+				else {
+					channels.push('registered')
+				}
+				payload.groups.forEach(groupID => channels.push(`group-${groupID}`))
+				payload.channels.forEach(channel => channels.push(`channel-${channel}`))
 				
-				try {
-					channels = JSON.parse(reply)
-					channels.forEach(channel => socket.join(channel))
-					
-					connected()
-				}
-				catch (e) {
-					socket.disconnect()
-					return
-				}
+				channels.forEach(channel => socket.join(channel))
+				connected()
+			})
+			
+			socket.on('token', function (token) {
+				debug(`Client ${id} sent reconnect token ${token}`)
+				r.get(`${config.uuid}:nodePush:token:${token}`)
+					.then(function (reply) {
+						return r.del(`${config.uuid}:nodePush:token:${token}`)
+							.then(() => {
+								if (reply === null) {
+									debug(`Client ${id} reconnect token does not exist, disconnecting`)
+									socket.disconnect()
+									return
+								}
+								
+								try {
+									channels = JSON.parse(reply)
+									channels.forEach(channel => socket.join(channel))
+									
+									connected()
+								}
+								catch (e) {
+									socket.disconnect()
+									return
+								}
+							})
+					})
+					.catch(function (err) {
+						debug(`Client ${id} failed to look up reconnect token, disconnecting: ${err}`)
+						socket.disconnect()
+					})
 			})
 		})
-	})
 
-	rsub.on('message', function (channel, _message) {
-		stats.inbound++
-		if (channel === `${config.uuid}:nodePush`) {
+		rsub.subscribe(`${config.uuid}:nodePush`, (_message) => {
+			stats.inbound++
+
 			debug(`Push: ${_message}`)
 			try {
 				_message = JSON.parse(_message)
@@ -298,8 +313,6 @@ server.listen(config.outbound.port, config.outbound.host, null, function () {
 			const payload = _message.payload
 
 			sendMessage(message, target, payload)
-		}
+		})
 	})
-
-	rsub.subscribe(`${config.uuid}:nodePush`)
 })
