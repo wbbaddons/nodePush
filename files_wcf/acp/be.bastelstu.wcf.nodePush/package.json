@@ -16,7 +16,7 @@
 		"express": "^4.22.1",
 		"rc": "^1.2.8",
 		"redis": "^5.11.0",
-		"socket.io": "^4.6.1"
+		"socket.io": "^4.8.3"
 	},
 	"type": "module",
 	"exports": "./server.js",
