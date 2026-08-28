@@ -40,44 +40,4 @@
 		<instruction type="eventListener" />
 		<instruction type="templateListener" />
 	</instructions>
-
-	<instructions type="update" fromversion="3.3.4">
-		<instruction type="file" application="wcf">files_wcf.tar</instruction>
-		<instruction type="language">language/*.xml</instruction>
-		<instruction type="option" />
-		<instruction type="eventListener" />
-		<instruction type="templateListener" />
-	</instructions>
-
-	<instructions type="update" fromversion="3.3.3">
-		<instruction type="file" application="wcf">files_wcf.tar</instruction>
-		<instruction type="language">language/*.xml</instruction>
-		<instruction type="option" />
-		<instruction type="eventListener" />
-		<instruction type="templateListener" />
-	</instructions>
-
-	<instructions type="update" fromversion="3.3.2">
-		<instruction type="file" application="wcf">files_wcf.tar</instruction>
-		<instruction type="language">language/*.xml</instruction>
-		<instruction type="option" />
-		<instruction type="eventListener" />
-		<instruction type="templateListener" />
-	</instructions>
-
-	<instructions type="update" fromversion="3.3.1">
-		<instruction type="file" application="wcf">files_wcf.tar</instruction>
-		<instruction type="language">language/*.xml</instruction>
-		<instruction type="option" />
-		<instruction type="eventListener" />
-		<instruction type="templateListener" />
-	</instructions>
-
-	<instructions type="update" fromversion="3.3.0">
-		<instruction type="file" application="wcf">files_wcf.tar</instruction>
-		<instruction type="language">language/*.xml</instruction>
-		<instruction type="option" />
-		<instruction type="eventListener" />
-		<instruction type="templateListener" />
-	</instructions>
 </package>
