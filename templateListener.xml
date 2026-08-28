@@ -23,10 +23,10 @@
 			<!-- Don't use javascriptInit, as it runs after the DOM is loaded -->
 			<eventname>javascriptInclude</eventname>
 			<templatecode><![CDATA[
-{if NODEPUSH_HOST}
+{if $nodePushHandler->isEnabled()}
 <script data-relocate="true">
 	require([ 'Bastelstu.be/NodePush' ], function (nodePush) {
-		nodePush.init('{@NODEPUSH_HOST|encodeJS}', '{$nodePushSignedUserID|encodeJS}')
+		nodePush.init('{@NODEPUSH_HOST|encodeJS}', '{$nodePushHandler->getSignedUserId()|encodeJS}')
 	})
 </script>
 {/if}

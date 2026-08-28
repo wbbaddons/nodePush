@@ -29,12 +29,12 @@ class TemplateEngineBeforeDisplayNodePushListener implements IParameterizedEvent
 	 * @see	\wcf\system\event\IEventListener::execute()
 	 */
 	public function execute($eventObj, $className, $eventName, &$parameters) {
-		if (!\wcf\system\nodePush\NodePushHandler::getInstance()->isEnabled()) {
+		if (\version_compare(WCF_VERSION, '6.0') >= 0) {
 			return;
 		}
 		
 		WCF::getTPL()->assign([
-			'nodePushSignedUserID' => NodePushHandler::getInstance()->getSignedUserId(),
+			'nodePushHandler' => NodePushHandler::getInstance(),
 		]);
 	}
 }
