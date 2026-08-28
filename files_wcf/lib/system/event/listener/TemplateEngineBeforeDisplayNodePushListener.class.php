@@ -18,7 +18,8 @@
 
 namespace wcf\system\event\listener;
 
-use \wcf\system\WCF;
+use wcf\system\nodePush\NodePushHandler;
+use wcf\system\WCF;
 
 /**
  * Signs the user id.
@@ -32,19 +33,8 @@ class TemplateEngineBeforeDisplayNodePushListener implements IParameterizedEvent
 			return;
 		}
 		
-		$channels = \wcf\system\push\PushHandler::getInstance()->getChannels();
-		
-		$payload = [
-			'userID'    => WCF::getUser()->userID,
-			'timestamp' => TIME_NOW,
-			'channels'  => $channels,
-			'groups'    => WCF::getUser()->getGroupIDs()
-		];
-		
 		WCF::getTPL()->assign([
-			'nodePushSignedUserID' => \wcf\util\CryptoUtil::createSignedString(
-				\json_encode($payload, \JSON_THROW_ON_ERROR)
-			),
+			'nodePushSignedUserID' => NodePushHandler::getInstance()->getSignedUserId(),
 		]);
 	}
 }

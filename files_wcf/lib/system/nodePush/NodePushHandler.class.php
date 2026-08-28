@@ -18,7 +18,9 @@
 
 namespace wcf\system\nodePush;
 
-use \wcf\system\cache\CacheHandler;
+use wcf\system\cache\CacheHandler;
+use wcf\system\WCF;
+use wcf\util\CryptoUtil;
 
 /**
  * Transmits push messages to the nodePush service.
@@ -99,5 +101,20 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 			'payload' => $payload,
 			'target' => $target
 		]);
+	}
+
+	public function getSignedUserId(): string {
+		$channels = \wcf\system\push\PushHandler::getInstance()->getChannels();
+		
+		$payload = [
+			'userID'    => WCF::getUser()->userID,
+			'timestamp' => TIME_NOW,
+			'channels'  => $channels,
+			'groups'    => WCF::getUser()->getGroupIDs()
+		];
+
+		return CryptoUtil::createSignedString(
+			\json_encode($payload, \JSON_THROW_ON_ERROR)
+		);
 	}
 }
