@@ -28,7 +28,9 @@ class TemplateEngineBeforeDisplayNodePushListener implements \wcf\system\event\I
 	 * @see	\wcf\system\event\IEventListener::execute()
 	 */
 	public function execute($eventObj, $className, $eventName) {
-		if (!\wcf\system\nodePush\NodePushHandler::getInstance()->isEnabled()) return;
+		if (!\wcf\system\nodePush\NodePushHandler::getInstance()->isEnabled()) {
+			return;
+		}
 		
 		$channels = \wcf\system\push\PushHandler::getInstance()->getChannels();
 		

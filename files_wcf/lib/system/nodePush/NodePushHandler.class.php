@@ -42,8 +42,13 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 * @see	\wcf\system\push\PushHandler::isRunning()
 	 */
 	public function isRunning(): bool {
-		if (!$this->isEnabled()) return false;
-		if (!(CacheHandler::getInstance()->getCacheSource() instanceof \wcf\system\cache\source\RedisCacheSource)) return false;
+		if (!$this->isEnabled()) {
+			return false;
+		}
+
+		if (!(CacheHandler::getInstance()->getCacheSource() instanceof \wcf\system\cache\source\RedisCacheSource)) {
+			return false;
+		}
 		
 		return true;
 	}
@@ -52,10 +57,18 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	 * @see	\wcf\system\push\PushHandler::sendMessage()
 	 */
 	public function sendMessage($message, array $userIDs = [ ], array $payload = [ ]) {
-		if (!$this->isRunning()) return false;
+		if (!$this->isRunning()) {
+			return false;
+		}
+
 		if (is_array($message)) {
-			if (!isset($message['message'])) return false;
-			if (!\wcf\data\package\Package::isValidPackageName($message['message'])) return false;
+			if (!isset($message['message'])) {
+				return false;
+			}
+
+			if (!\wcf\data\package\Package::isValidPackageName($message['message'])) {
+				return false;
+			}
 			
 			try {
 				$redis = CacheHandler::getInstance()->getCacheSource()->getRedis();
@@ -71,12 +84,16 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 			}
 		}
 		
-		if (!\wcf\data\package\Package::isValidPackageName($message)) return false;
+		if (!\wcf\data\package\Package::isValidPackageName($message)) {
+			return false;
+		}
+
 		$userIDs = array_unique(\wcf\util\ArrayUtil::toIntegerArray($userIDs));
 		$target = null;
 		if ($userIDs) {
 			$target = [ 'users' => array_values($userIDs) ];
 		}
+
 		return $this->sendMessage([
 			'message' => $message,
 			'payload' => $payload,
