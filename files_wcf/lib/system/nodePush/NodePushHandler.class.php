@@ -69,8 +69,6 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 			catch (\Exception $e) {
 				return false;
 			}
-			
-			return;
 		}
 		
 		if (!\wcf\data\package\Package::isValidPackageName($message)) return false;
