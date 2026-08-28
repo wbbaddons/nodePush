@@ -42,7 +42,9 @@ class TemplateEngineBeforeDisplayNodePushListener implements IParameterizedEvent
 		];
 		
 		WCF::getTPL()->assign([
-			'nodePushSignedUserID' => \wcf\util\CryptoUtil::createSignedString(\wcf\util\JSON::encode($payload))
+			'nodePushSignedUserID' => \wcf\util\CryptoUtil::createSignedString(
+				\json_encode($payload, \JSON_THROW_ON_ERROR)
+			),
 		]);
 	}
 }

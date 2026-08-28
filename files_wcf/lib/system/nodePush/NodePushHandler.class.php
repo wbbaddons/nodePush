@@ -72,12 +72,12 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 			
 			try {
 				$redis = CacheHandler::getInstance()->getCacheSource()->getRedis();
-				return $redis->publish('nodePush', \wcf\util\JSON::encode([
+				return $redis->publish('nodePush', \json_encode([
 					'message' => $message['message'],
 					'target'  => isset($message['target']) ? $message['target'] : null,
 					'payload' => isset($message['payload']) ? $message['payload'] : [ ],
 					
-				]));
+				], \JSON_THROW_ON_ERROR));
 			}
 			catch (\Exception $e) {
 				return false;
