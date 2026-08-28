@@ -27,21 +27,21 @@ class NodePushHandler extends \wcf\system\SingletonFactory {
 	/**
 	 * @see	\wcf\system\push\PushHandler::getFeatureFlags()
 	 */
-	public function getFeatureFlags() {
+	public function getFeatureFlags(): array {
 		return [ 'authentication', 'target:channels', 'target:groups', 'target:users', 'target:registered', 'target:guest' ];
 	}
 
 	/**
 	 * @see	\wcf\system\push\PushHandler::isEnabled()
 	 */
-	public function isEnabled() {
+	public function isEnabled(): bool {
 		return (boolean) NODEPUSH_HOST;
 	}
 	
 	/**
 	 * @see	\wcf\system\push\PushHandler::isRunning()
 	 */
-	public function isRunning() {
+	public function isRunning(): bool {
 		if (!$this->isEnabled()) return false;
 		if (!(CacheHandler::getInstance()->getCacheSource() instanceof \wcf\system\cache\source\RedisCacheSource)) return false;
 		
