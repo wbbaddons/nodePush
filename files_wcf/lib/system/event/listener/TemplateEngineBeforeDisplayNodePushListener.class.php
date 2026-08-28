@@ -23,11 +23,11 @@ use \wcf\system\WCF;
 /**
  * Signs the user id.
  */
-class TemplateEngineBeforeDisplayNodePushListener implements \wcf\system\event\IEventListener {
+class TemplateEngineBeforeDisplayNodePushListener implements IParameterizedEventListener {
 	/**
 	 * @see	\wcf\system\event\IEventListener::execute()
 	 */
-	public function execute($eventObj, $className, $eventName) {
+	public function execute($eventObj, $className, $eventName, &$parameters) {
 		if (!\wcf\system\nodePush\NodePushHandler::getInstance()->isEnabled()) {
 			return;
 		}
